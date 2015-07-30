@@ -1,0 +1,355 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Modernizing Our Software Portfolio</title>
+    <meta name="description" content="Presentation: Modernizing Our Software Portfolio">
+    <meta name="author" content="Deschutes County IT">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/serif.css" id="theme">
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="tree.css">
+    
+    <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <style>
+        .reveal i.fa {
+            font-family: FontAwesome;
+            font-style: normal;
+        }
+
+        .reveal ul > li > ul > li {
+            font-size: 70%;
+        }
+
+        .reveal h2 {
+            line-height: 1.1em;
+        }
+    </style>
+    <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+    <script>
+        document.write('<link rel="stylesheet" href="css/print/' + (window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper') + '.css" type="text/css" media="print">');
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+
+
+    
+</head>
+<body>
+    <div class="reveal">
+        <!-- Any section element inside of this container is displayed as a slide -->
+        <div class="slides">
+            <section>
+                <h2>
+                    Modernizing Our<br />Software Portfolio
+                </h2>
+                <h3>2009 - 2015</h3>
+                <br />
+
+                <p>
+                        Joe Sadony<br />
+                        Shad Campbell<br />
+                </p>
+
+            </section>
+
+
+            <section>
+                <h2>The Challenge</h2>
+                <ul>
+                    <li>In 2009 the IT Department was tasked with replacing the county’s legacy application and bringing to an end the legacy application development program.</li>
+                    <li>Approximately 50% of the county’s LOB application portfolio were operating on the legacy platform.</li>
+                    <li>The IT Department did not have an established program for the deployment, development or support of non-legacy applications.</li>
+                </ul>
+            </section>
+
+
+
+
+            <section>
+                <h2>The Legacy System Environment</h2>
+                <ul>
+                    <li>First line of code written in 1984 (District Attorney)</li>
+                    <li>
+                        Technology
+                        <ul>
+                            <li>PICK DBMS on AIX (jBase)</li>
+                            <li>Accuterm / Symbion GUI</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Challenges / Risks
+                        <ul>
+                            <li>Replacing programming staff</li>
+                            <li>jBase environment not easily upgraded</li>
+                            <li>Reliance on micro vendors for critical features</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Department Strategy</h2>
+                <ul>
+                    <li>First line of code written in 1984 (District Attorney)</li>
+                    <li>
+                        Technology
+                        <ul>
+                            <li>PICK DBMS on AIX (jBase)</li>
+                            <li>Accuterm / Symbion GUI</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Challenges / Risks
+                        <ul>
+                            <li>Replacing programming staff</li>
+                            <li>jBase environment not easily upgraded</li>
+                            <li>Reliance on micro vendors for critical features</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+
+
+            <section>
+                <h2>Legacy Applications</h2>
+                <ul style="font-size:70%;">
+                    <li>Law Enf. Records (Regional) - New World Systems, Aegis</li>
+                    <li>
+                        Behavioral Health EMR – Cocentrix, Profiler
+                    </li>
+                    <li>
+                        District Attorney Case Management – New Dawn, Justware
+                    </li>
+                    <li>
+                        Jail Management – Interact, Jailtracker
+                    </li>
+                    <li>
+                        Juvenile Justice Records – Lane County
+                    </li>
+                    <li>
+                        Community Development Permits/Planning/Code Enf. – Accela
+                    </li>
+                    <li>
+                        Justice Court Case Management – Chaves Consulting, MAJIC
+                    </li>
+                    <li>
+                        Sheriff Civil Processing – Developed in house
+                    </li>
+                    <li>
+                        Pet Licensing – Developed in house
+                    </li>
+                    <li>
+                        Parole and Probation Records – Developed in house
+                    </li>
+                    <li>
+                        Developmental Disabilities Records – Developed in house
+                    </li>
+                    <li>
+                        Environmental Health Permits and licenses – Developed in house
+                    </li>
+                </ul>
+            </section>
+
+
+            <section>
+                <h2>County Culture</h2>
+                <ul>
+                    <li>
+                        County departments operate as independent entities.
+                    </li>
+                    <li>
+                        Some departments are run by elected officials (Sheriff, Clerk, DA, Assessor, Treasurer).
+                    </li>
+                    <li>
+                        County Administrator develops policy and is a liaison between the Board and county operations.
+                    </li>
+                    <li>
+                        There is no mandate in place supporting the used of internal services.
+                    </li>
+                    <li>
+                        The Budget Committee and the County Auditor are my best friends.
+                    </li>
+                </ul>
+            </section>
+
+
+
+
+            <section>
+                <h2>Assumptions:</h2>
+                <ul>
+                    <li>“Buy before build”.  Build when all else fails.</li>
+                    <li>Departments will need to learn what it means to “own” software and manage vendor relationships.</li>
+                    <li>Departments will need to develop skillsets to support their software.</li>
+                    <li>I.T. will provide implementation and maintenance support as necessary.</li>
+                    <li>The cost of software will increase from what they are current paying.</li>
+                    <li>I.T. will seek to decrease operational costs in order to offset the increase in departmental operating expenses.</li>
+                </ul>
+            </section>
+
+
+            <section>
+                <h2>Our Changing Role</h2>
+                <ul>
+                    <li>Review service model and move focus to “core” services.</li>
+                    <li>Flex our service model to provide support for departments wanting support from I.T.</li>
+                    <li>Develop apps where no other alternative exists.</li>
+                    <li>Reduce operating costs realizing cost are going up before the we gain control.</li>
+               </ul>
+            </section>
+
+           
+            <section>
+                <h2>Best Laid Plans…</h2>
+                <ul>
+                    <li>
+                        We put together a three year plan for implementation of the largest or most complex systems.
+                    </li>
+                    <li>
+                        Various issues caused most replacements go-live in late 2012 through early 2013.
+                    </li>
+                    <li>
+                        However, it all happened.
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Current Status</h2>
+                <ul>
+                    <li>All legacy applications replaced</li>
+                    <li>New application development support services</li>
+                    <li>FTE count form 23, in 2009 to 18 in 2015</li>
+                    <li>Interfund charges from $1.97M in 2009 to $2.04M in 2015 (+3.5%)</li>
+                </ul>
+            </section>
+
+            <section data-state="orgTree" id="orgTree">
+                <h3>Organizational Chart</h3>
+                <span class="stretch" id='orgTree'></span>
+            </section>
+
+            <section>
+                <section data-state="appsTree" id="appsTree">
+                    <h3>Software team provides:</h3>
+                    <span id='appsTree'></span>
+                </section>
+                <section>
+                    <h2>Desktop Solutions</h2>
+                    <ul>
+                        <li>Visual Studio LightSwitch</li>
+                        <li>
+                            Applications:
+                            <ul>
+                                <li>Adult Corrections Case Management System</li>
+                                <li>Developmental Disabilities Case Management System</li>
+                                <li>Civil Court Papers Tracking System</li>
+                                <li>
+                                    <a href="https://webapps.deschutes.org/petlicensing/desktopclient/" target="_blank">Pet Licensing</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <br />
+                    <br />
+                    <br />
+                    <a href="#/appsTree">Back</a>
+                </section>
+                <section>
+                    <h2>Web Solutions</h2>
+                    <ul>
+                        <li>ASP.NET MVC and Web API</li>
+                        <li>Bootstrap/JQuery</li>
+                        <li>ESRI, Google Maps, and LaserFiche APIs</li>
+                        <li>
+                            Applications:
+                            <ul>
+                                <li><a href="http://dial.deschutes.org" target="_blank">Property Information System (Dial)</a></li>
+                                <li><a href="http://webapps.deschutes.org/Elections/Home/Results/64" target="_blank">Elections data</a></li>
+                                <li><a href="http://www.deschutes.org/health/page/report-public-health-concern" target="_blank">Public Health Concern online</a></li>
+                                <li><a href="http://www.deschutes.org/cd/page/permit-query" target="_blank">Permits Query</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <br />
+                    <br />
+                    <br />
+                    <a href="#/appsTree">Back</a>
+                </section>
+
+
+
+                <section>
+                    <h2>GIS</h2>
+                    <ul>
+                        <li>
+                            ESRI Web Presense:
+                            <ul>
+                                <li>ArcGIS Online</li>
+                                <li>Story Maps/Templates</li>
+                                <li>WebApp Builder</li>
+                                <li>ESRI JSAPI</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="http://data.deschutes.org" target="_blank">ESRI Open Data</a>
+                        </li>
+                    </ul>
+
+                    <br />
+                    <br />
+                    <br />
+                    <a href="#/appsTree">Back</a>
+                </section>
+
+            </section>
+         
+
+            <section>
+<br /><br />
+                <h1>Thank you</h1>
+             </section>
+        </div>
+    </div>
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+    <script>
+
+        // Full list of configuration options available here:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+
+            theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+            transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/none
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+                { src: 'plugin/markdown/showdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+                { src: 'plugin/zoom-js/zoom.js', async: true, condition: function () { return !!document.body.classList; } },
+                { src: 'plugin/notes/notes.js', async: true, condition: function () { return !!document.body.classList; } }
+            ]
+        });
+
+    </script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.js"></script>
+    <script src='tree_data.js'></script>
+    <script src='tree.js'></script>
+
+</body>
+</html>
