@@ -42,6 +42,7 @@ Reveal.addEventListener('appsTree', function () {
 }, false);
 
 
+
 d3.select(self.frameElement).style("height", "800px");
 
 function update(source) {
