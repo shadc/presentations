@@ -2,38 +2,43 @@ var gisData = [{
     "name": "GIS @ Deschutes",
     "parent": "null",
     "_children": [
+            {
+                "name": "Assessor",
+                "url": "#/2/1"
+            },
     {
         "name": "911",
-        "url": "#/2/1"
-    },
-    {
-        "name": "Community Development",
         "url": "#/2/2"
     },
     {
-        "name": "Road Deptartment",
-        "url": "#/2/4"
+        "name": "Community Development",
+        "url": "#/2/3"
     },
     {
-        "name": "Clerk's Office",
+        "name": "Road Deptartment",
         "url": "#/2/5"
     },
     {
-        "name": "Search & Rescue / Emergency Services",
+        "name": "Clerk's Office",
         "url": "#/2/6"
     },
     {
-        "name": "Forester",
+        "name": "Search & Rescue / Emergency Services",
         "url": "#/2/7"
     },
+        {
+            "name": "Surveyor's Office",
+            "url": "#/2/8"
+        },
+
     {
-        "name": "Assessor",
-        "url": "#/2/8"
+        "name": "Forester",
+        "url": "#/2/9"
     },
     {
         "name": "Information Technology",
-        "url": "#/2/9"
-}
+        "url": "#/2/10"
+    }
 
     ]
 }];
