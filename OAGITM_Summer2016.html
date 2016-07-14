@@ -1,0 +1,284 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>@MapNight</title>
+    <meta name="description" content="MapNight Presentation">
+    <meta name="author" content="Shad Campbell">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/blood.css" id="theme">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="tree.css">
+    <style>
+        .node text {
+            fill: #eee;
+        }
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="reveal">
+        <!-- Any section element inside of this container is displayed as a slide -->
+        <div class="slides">
+
+            <section>
+                <h2>
+                    Deschutes County GIS
+                </h2>
+                <br />
+                <h3>#OAGITM</h3>
+                <br />
+                <p>
+                    Shad Campbell <br /> <small>@shadcampbell</small><br />
+                </p>
+            </section>
+
+
+            <section>
+                <h2>History</h2>
+                <ul>
+                    <li>Started "GIS" in 1990 - 1 Engineering Assistance</li>
+                    <li>Within 5 years - 6 GIS Specialists</li>
+                    <li>25 years later - 11 GIS Professionals in 6 departments</li>
+                    <li>
+                        Original Deschutes County GIS Logo<br />
+                        <img style="display: block; margin-left: auto; margin-right: auto;" src="./images/OldLogo.png" />
+                    </li>
+                </ul>
+            </section>
+           
+
+                <section data-state="gisTree" id="gisTree">
+                    <h3>Departments Using GIS</h3>
+                    <span id='gisTree'></span>
+                </section>
+
+
+               <section>
+                <h3>Departments IT supports</h3>
+                <p class="">Clerks Office</p>
+                <p class="">Search and Rescue</p>
+                <p class="">Emergency Management</p>
+                <p class="">Property Management</p>
+                <p class="">Surveyor's Office</p>
+                <p class="">County Forester</p>
+          
+            </section>
+
+
+
+
+                <section>
+                    <h3>SDE/Database</h3>
+                    <strong>Distributing the Tax Burden</strong>
+                    <br />
+                    <span>
+                        <img src="./images/ASR-1.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                <section>
+                    <h3>911</h3>
+                    <strong>Citizen Emergency Notification System</strong>
+                    <br />
+                    <span>
+                        <img src="./images/911-1.png" style="max-height:315px" />  <img src="./images/911-2.png" style="max-height:315px" />
+                    </span>
+
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+                <section>
+                    <h3>Community Development</h3>
+                    <strong>Citizen Land Use Outreach</strong>
+                    <br />
+                    <span>
+                        <img src="./images/CDD-2.png" style="max-height:415px" />  <img src="./images/CDD-1.png" style="max-height:315px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/2/4">Next</a>
+                </section>
+
+
+                <section>
+                    <h3>Community Development</h3>
+                    <strong>Preserve and Protect Historic Places</strong>
+                    <br />
+                    <span>
+                        <img src="./images/CDD-3.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                <section>
+                    <h3>Road Department</h3>
+                    <strong>Managing Snow/Ice For Safer Roads</strong>
+                    <br />
+                    <span>
+                        <img src="./images/ROAD-1.png" style="max-height:415px" />
+                        <img src="./images/ROAD-2.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                <section>
+                    <h3>Clerk's Office</h3>
+                    <strong>Assuring the Correct Ballot for Voters</strong>
+                    <br />
+
+                    <span>
+                        <img src="./images/CLERK-1.png" style="max-height:315px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                <section>
+                    <h3>SAR/Emergency Services</h3>
+                    <strong>Wildire Evacuation Areas</strong>
+                    <br />
+
+                    <span>
+                        <img src="./images/ES-1.png" style="max-height:415px" />
+                        <img src="./images/ES-2.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                <section>
+                    <h3>Surveyor's Office</h3>
+                    <strong></strong>
+                    <br />
+                    <span>
+                        <img src="./images/SURVEY-1.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+                
+                <section>
+                    <h3>Forester</h3>
+                    <strong>WildFire Danger Areas and Mitigation</strong>
+                    <br />
+                    <span>
+                        <img src="./images/FORESTER-1.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+
+
+                <section>
+                    <h3>Information Technology</h3>
+                    <a target="_blank" href="http://maps.deschutes.org">http://maps.deschutes.org</a>
+                    <br />
+                    <span>
+                        <img src="./images/IT-1.png" style="max-height:315px" />
+                    </span>              
+                    <a style="position:absolute; bottom:0;" href="#/2/11">Next</a>
+                </section>
+
+
+                <section>
+                    <h3>Information Technology</h3>
+                    <a target="_blank" href="http://dial.deschutes.org">http://dial.deschutes.org</a>
+                    <br />
+                    <span>
+                        <img src="./images/IT-2.png" style="max-height:415px" />
+                    </span>
+                    <a style="position:absolute; bottom:0;" href="#/gisTree">Back</a>
+                </section>
+
+
+
+            <section>
+                <h3>We eat our own dog food!!</h3>
+                <p class="fragment">We create data and applications</p>
+                <p class="fragment">We use them internally (and externally)</p>
+                <br />
+                <h4 class="fragment roll-in">And... we provide free access to our data.</h4>
+            </section>
+
+            <section data-background="http://i.giphy.com/90F8aUepslB84.gif">
+                <br /><br /><br /><br /><br /><br /><br /><br />
+                <h3 style="color:#a23">... Did you say FREE DATA!</h3>
+            </section>
+
+
+            <section>
+                <h3>Yes I did!!</h3>
+                <p class="fragment">GIS data for download</p>
+                <p class="fragment">ESRI ArcGIS REST API</p>
+                <p class="fragment">Dial API</p>
+                <p class="fragment">Python script samples for automated downloads</p>
+                <br />
+                <br />
+                <a class="fragment" target="_blank" href="http://data.deschutes.org">http://data.deschutes.org</a>
+
+               
+            </section>
+
+
+
+
+
+            <section>
+                <br /><br />
+                <h1>Thank you</h1>
+            </section>
+
+        </div>
+    </div>
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+    <script>
+
+        // Full list of configuration options available at:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            viewDistance: 11, // this accomidates sliding between long distance slides.
+            // Optional reveal.js plugins
+            dependencies: [
+                { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+                { src: 'plugin/markdown/marked.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+                { src: 'plugin/zoom-js/zoom.js', async: true },
+                { src: 'plugin/notes/notes.js', async: true }
+            ]
+        });
+
+    </script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.js"></script>
+    <script src='tree_data_oagitm16.js'></script>
+    <script src='tree_mapnight.js'></script>
+
+</body>
+</html>
