@@ -68,9 +68,21 @@ function update(source) {
         .style("fill", function (d) { return d._children ? "#ccff99" : "#fff"; });
 
     nodeEnter.append("text")
-        .attr("x", function (d) { return d.children || d._children ? -13 : 13; })
+        //console.log(parent)
+        .attr("x", function (d) { 
+            if (d.parent!='null') return -30;
+            return d.children || d._children ? -13 : 13; 
+            })
+        .attr("y", function (d) { 
+            if (d.parent!='null') return -30;
+            return 0; 
+            })
         .attr("dy", ".35em")
-        .attr("text-anchor", function (d) { return d.children || d._children ? "end" : "start"; })
+        .attr("text-anchor", function (d) { 
+            if (d.parent!='null') return "null";
+            return d.children || d._children ? "end" : "start"; 
+            })
+
         .text(function (d) { return d.name; })
         .style("fill-opacity", 1e-6)
        .attr("class", function (d) {
