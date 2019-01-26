@@ -1,0 +1,418 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Intro to SceneView - Create a 3D map</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cedarville+Cursive">
+
+    <style>
+        html,
+    body,
+    #viewDiv {
+        position: absolute;
+            left: 0;
+            top: 90px;
+            bottom: 0;
+            width: 100%;
+    }
+
+
+        #tour {
+            position: absolute;
+            top: 0;
+            background: #FFF;
+            width: 100%;
+            height: 90px;
+            opacity: 0.8;
+            color: #002e5d;
+            z-index: 1;
+        }
+
+        #tour-start{
+            font-size: 28px;
+        }
+
+        #tour-container {
+            margin-left: 30px;
+            font-family: 'Cedarville Cursive', sans-serif;
+            display: inline-block;
+        }
+
+        #tour-container a {
+            font-weight:bold;
+            color:red;
+        }
+
+        #tour-name {
+            font-size: 30px;
+            margin-left: 30px;
+            margin-top:5px;
+            margin-bottom:5px;
+            display: inline-block
+        }
+
+
+
+    #basemap-button {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .btn-group {
+        position: absolute;
+        text-align: center;
+        max-width: 30px;
+        height: 30px;
+        left: 15px;
+        top: 210px;
+        z-Index: 31;
+        /* overflow: hidden; */
+    }
+
+</style>
+
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/js-url/1.8.4/url.min.js"></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src="https://js.arcgis.com/4.10/"></script>
+
+    <script>
+        dojoConfig = {
+            async: true,
+            gfxRenderer: "svg" // svg gets priority
+        };
+    </script>
+
+    <script>
+        require([
+            "esri/layers/WebTileLayer",
+            "esri/Map",
+            "esri/views/SceneView",
+            "dojo/_base/array",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/layers/FeatureLayer",
+            "esri/layers/support/Field"
+        ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field) {
+            var map = new Map({
+                ground: "world-elevation"
+            });
+
+
+            var view = new SceneView({
+                container: "viewDiv",     // Reference to the scene div created in step 5
+                map: map,                 // Reference to the map object created before the scene
+                scale: 50000,          // Sets the initial scale to 1:50,000,000
+                center: [-121.649918, 43.98473]  // Sets the center point of view with lon/lat
+            });
+
+
+            // Basemap events
+            $(".dropdown-menu a").each(function (index) {
+                map.add(new WebTileLayer($(this).attr("data-url"), JSON.parse($(this).attr("data-options"))));
+            });
+
+            $(".dropdown-menu a").click(function () {
+
+                
+
+
+                let layerId = JSON.parse($(this).attr("data-options")).id;
+                map.layers.forEach(function (layer, i) {
+                    if (layer.type =="web-tile"){
+                        layer.visible = (layer.id == layerId) ? true : false;
+                    }
+                })
+            });
+
+            var graphicsLayer = new GraphicsLayer();
+            map.add(graphicsLayer);
+
+
+
+
+      // First create a point geometry (this is the location of the Titanic)
+      var point = {
+        type: "point", // autocasts as new Point()
+        longitude: -121.649918,
+        latitude: 43.98473
+      };
+
+      // Create a symbol for drawing the point
+      var markerSymbol = {
+        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+        color: [226, 119, 40],
+        outline: { // autocasts as new SimpleLineSymbol()
+          color: [255, 255, 255],
+          width: 2
+        }
+      };
+
+      // Create a graphic and add the geometry and symbol to it
+      var pointGraphic = new Graphic({
+        geometry: point,
+        symbol: markerSymbol
+      });
+
+
+
+graphicsLayer.add(pointGraphic);
+
+
+
+
+
+
+
+
+            let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
+            let geoJson = (url('?r') != null) ? url('?r') : gist;
+
+            d3.json(geoJson, function (collection) {
+
+                let routes = collection.features.filter(function (d) {
+                    return d.geometry.type == "LineString";
+                });
+
+                let routeFeatures = [];
+                routes.forEach(function (r, i) {
+                    let polyline = {
+                        type: "polyline", // autocasts as new Polyline()
+                        paths: r.geometry.coordinates
+                    };
+                    let atts = {}
+                    atts.OBJECTID = i;
+                    atts.Route = r.properties.Route
+                    routeFeatures.push({ geometry: polyline, attributes: atts })
+                });
+
+
+                var routelayer = new FeatureLayer({
+                    source: routeFeatures,  // autocast as a Collection of new Graphic()
+                    renderer: {
+                        type: "simple",  // autocasts as new SimpleRenderer()
+                        symbol: {
+                                type: "simple-line",  // autocasts as new SimpleLineSymbol()
+                                color: [255,255, 0, .5],
+                                width: "1px",
+                                style: "solid"
+                        }
+                    },
+                    fields: [
+                        new Field({
+                            name: "ObjectID",
+                            alias: "ObjectID",
+                            type: "oid"
+                        }), new Field({
+                            name: "Route",
+                            alias: "Route",
+                            type: "string"
+                        })
+                    ]
+                });
+                map.add(routelayer);
+
+         
+
+
+                //-- Add Labels and graphic points for labels
+                let labels = collection.features.filter(function (d) {
+                    return d.geometry.type == "Point" && d.properties.Label !== undefined && d.properties.Label !== null;
+                });
+
+                let labelFeatures = [];
+                labels.forEach(function (e, i) {
+                    let pt = { type: "point", x: e.geometry.coordinates[0], y: e.geometry.coordinates[1] };
+                    let atts = {}
+                    atts.OBJECTID = i;
+                    atts.LABEL = e.properties.Label
+                    labelFeatures.push({ geometry: pt, attributes: atts })
+                });
+
+                var layer = new FeatureLayer({
+                    source: labelFeatures,  // autocast as a Collection of new Graphic()
+                    featureReduction: {
+                        type: "selection"
+                    },
+                    renderer: {
+                        type: "simple",  // autocasts as new SimpleRenderer()
+                        symbol: {
+                            type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                            size: 12,
+                            color: [255, 0, 0, .25],
+                            outline: {  // autocasts as new SimpleLineSymbol()
+                                color: [255, 0, 0, 1],
+                                width: "1px"
+                            }
+                        }
+                    },
+                    fields: [
+                        new Field({
+                            name: "ObjectID",
+                            alias: "ObjectID",
+                            type: "oid"
+                        }), new Field({
+                            name: "LABEL",
+                            alias: "LABEL",
+                            type: "string"
+                        })
+                    ],
+                    labelingInfo: [{
+                        // When using callouts on labels, "above-center" is the only allowed position
+                        labelPlacement: "above-center",
+                        labelExpressionInfo: {
+                            value: "{LABEL}"
+                        },
+                        symbol: {
+                            type: "label-3d", // autocasts as new LabelSymbol3D()
+                            symbolLayers: [{
+                                type: "text", // autocasts as new TextSymbol3DLayer()
+                                material: {
+                                    color: "white"
+                                },
+                                halo: {
+                                    color: [0, 0, 139, .75],
+                                    size: "1px",
+                                },
+                                size: 10
+                            }],
+                            // Labels need a small vertical offset that will be used by the callout
+                            verticalOffset: {
+                                screenLength: 50,
+                                maxWorldLength: 2000,
+                                minWorldLength: 30
+                            },
+                            // The callout has to have a defined type (currently only line is possible)
+                            // The size, the color and the border color can be customized
+                            callout: {
+                                type: "line", // autocasts as new LineCallout3D()
+                                size: 0.2,
+                                color: [0, 0, 0],
+                                border: {
+                                    color: [255, 255, 255, 0.7]
+                                }
+                            }
+                        }
+                    }]
+                });
+                map.add(layer);
+
+
+
+
+
+
+
+            let line = turf.lineString(routes[0].geometry.coordinates);
+            let length = turf.length(line, {units: 'feet'});
+            let interval = length/1000;
+            let along = [];
+            for (i = 0; i < 1001; i++) {
+                along.push(turf.along(line, (i*interval), {units: 'feet'}))
+            }
+
+            var tour = setInterval(startTour,20);
+            
+            console.log(along);
+
+            t = 0;
+            function startTour(){
+                var point = {
+                    type: "point", // autocasts as new Point()
+                    longitude: along[t].geometry.coordinates[0],
+                    latitude: along[t].geometry.coordinates[1]
+                };
+                console.log(point);
+                pointGraphic.geometry = point;
+                t++
+                if (t > 1000) clearInterval(tour);
+            }
+
+
+
+
+
+            
+            // setTimeout(function(){ 
+
+            //     var point = {
+            //         type: "point", // autocasts as new Point()
+            //         longitude: -121.659918,
+            //         latitude: 43.99473
+            //     };
+
+            //     //-121.649918, 43.98473
+                
+            //     //console.log(pointGraphic);
+            //     pointGraphic.geometry = point;
+            //     console.log("done");
+            //  }, 10000);
+
+
+
+            });
+       });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+
+
+
+
+
+
+
+    <!-- <div class="btn-group"> -->
+    <div class="btn-group">
+        <button id="basemap-button" type="button" class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
+            <!-- Basemaps
+                    <span class="caret"></span> -->
+
+            <span class="glyphicon glyphicon-th" aria-hidden="true"></span>
+        </button>
+
+
+        <ul class="dropdown-menu">
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Run/Bike/Hike", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://{subDomain}.tiles.mapbox.com/v4/mapbox.run-bike-hike/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Run/Bike/Hike
+                </a>
+            </li>
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Outdoors", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://{subDomain}.tiles.mapbox.com/v4/mapbox.outdoors/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Outdoors
+                </a>
+            </li>
+
+            <li>
+                <a href="#" data-options='{"id": "Esri World Imagery", "visible": true, "subDomains": ["services", "server"],
+            "copyright": "Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community "}'
+                    data-url="http://{subDomain}.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${row}/${col}">
+                    Esri World Imagery
+                </a>
+            </li>
+
+
+        </ul>
+    </div>
+    <!-- </div> -->
+
+
+
+</body>
+
+</html>

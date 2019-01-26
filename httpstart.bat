@@ -1,1 +1,1 @@
-http-server -p 8080 -c-1 -o
+http-server -p 8080 -c-1 -o http://localhost:8080/MyStoryTour.html

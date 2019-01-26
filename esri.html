@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Intro to graphics - 4.9</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.9/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.9/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer",
+      "esri/geometry/support/webMercatorUtils",
+      "esri/geometry/Polygon",
+      "esri/geometry/Polyline"
+    ], function(
+      Map, MapView, SketchViewModel, Graphic, GraphicsLayer, webMercatorUtils, Polygon, Polyline
+    ) {
+
+      let editGraphic;
+
+      // GraphicsLayer to hold graphics created via sketch view model
+      const graphicsLayer = new GraphicsLayer({
+        id: "tempGraphics"
+      });
+
+      const map = new Map({
+        basemap: "gray",
+        layers: [graphicsLayer]
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        zoom: 3
+      });
+
+      /*************************
+       * Create a point graphic
+       *************************/
+
+      // First create a point geometry (this is the location of the Titanic)
+      var point = {
+        type: "point", // autocasts as new Point()
+        longitude: -49.97,
+        latitude: 41.73
+      };
+
+      // Create a symbol for drawing the point
+      var markerSymbol = {
+        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+        color: [226, 119, 40],
+        outline: { // autocasts as new SimpleLineSymbol()
+          color: [255, 255, 255],
+          width: 2
+        }
+      };
+
+      // Create a graphic and add the geometry and symbol to it
+      var pointGraphic = new Graphic({
+        geometry: webMercatorUtils.geographicToWebMercator(point),
+        symbol: markerSymbol
+      });
+
+      /****************************
+       * Create a polyline graphic
+       ****************************/
+
+      // First create a line geometry (this is the Keystone pipeline)
+      var polyline = Polyline({
+        type: "polyline", // autocasts as new Polyline()
+        paths: [
+          [-111.30, 52.68],
+          [-98, 49.5],
+          [-93.94, 29.89]
+        ]
+      });
+
+      // Create a symbol for drawing the line
+      var lineSymbol = {
+        type: "simple-line", // autocasts as SimpleLineSymbol()
+        color: [226, 119, 40],
+        width: 4
+      };
+
+
+      /*******************************************
+       * Create a new graphic and add the geometry,
+       * symbol, and attributes to it. You may also
+       * add a simple PopupTemplate to the graphic.
+       * This allows users to view the graphic's
+       * attributes when it is clicked.
+       ******************************************/
+      var polylineGraphic = new Graphic({
+        geometry: webMercatorUtils.geographicToWebMercator(polyline),
+        symbol: lineSymbol
+      });
+
+      /***************************
+       * Create a polygon graphic
+       ***************************/
+
+      // Create a polygon geometry
+      var polygon = Polygon({
+        type: "polygon", // autocasts as new Polygon()
+        rings: [
+          [-64.78, 32.3],
+          [-66.07, 18.45],
+          [-80.21, 25.78],
+          [-64.78, 32.3]
+        ]
+      });
+
+      // Create a symbol for rendering the graphic
+      var fillSymbol = {
+        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+        color: [227, 139, 79, 0.8],
+        outline: { // autocasts as new SimpleLineSymbol()
+          color: [255, 255, 255],
+          width: 1
+        }
+      };
+
+      // Add the geometry and symbol to a new graphic
+      var polygonGraphic = new Graphic({
+        geometry: webMercatorUtils.geographicToWebMercator(polygon),
+        symbol: fillSymbol
+      });
+
+      const pointSymbol = {
+        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+        style: "square",
+        color: "#8A2BE2",
+        size: "16px",
+        outline: { // autocasts as new SimpleLineSymbol()
+          color: [255, 255, 255],
+          width: 3
+        }
+      };
+
+      const polylineSymbol = {
+        type: "simple-line", // autocasts as new SimpleLineSymbol()
+        color: "#8A2BE2",
+        width: "4",
+        style: "dash"
+      };
+
+      const polygonSymbol = {
+        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+        color: "rgba(138,43,226, 0.8)",
+        style: "solid",
+        outline: {
+          color: "white",
+          width: 1
+        }
+      };
+
+      view.when(function () {
+        // Add the graphics to the view's graphics layer
+        graphicsLayer.graphics.addMany([pointGraphic, polylineGraphic, polygonGraphic]);
+
+        // create a new sketch view model
+        const sketchViewModel = new SketchViewModel({
+          view,
+          layer: graphicsLayer,
+          pointSymbol,
+          polylineSymbol,
+          polygonSymbol
+        });
+
+        setUpClickHandler();
+
+        // Listen the sketchViewModel's update-complete and update-cancel events
+        sketchViewModel.on("update-complete", updateGraphic);
+        sketchViewModel.on("update-cancel", updateGraphic);
+
+        // Runs when sketchViewModel's update-complete or update-cancel
+        // events are fired.
+        function updateGraphic(event) {
+          // Create a new graphic and set its geometry event.geometry
+          var graphic = new Graphic({
+            geometry: event.geometry,
+            symbol: editGraphic.symbol
+          });
+          graphicsLayer.add(graphic);
+
+          // set the editGraphic to null update is complete or cancelled.
+          editGraphic = null;
+        }
+
+        // set up logic to handle geometry update and reflect the update on "graphicsLayer"
+        function setUpClickHandler() {
+          view.on("click", function (event) {
+            view.hitTest(event).then(function (response) {
+              var results = response.results;
+              if (results.length > 0) {
+                for (var i = 0; i < results.length; i++) {
+                  // Check if we're already editing a graphic
+                  if (!editGraphic && results[i].graphic.layer.id === "tempGraphics") {
+                    // Save a reference to the graphic we intend to update
+                    editGraphic = results[i].graphic;
+
+                    // Remove the graphic from the GraphicsLayer
+                    // Sketch will handle displaying the graphic while being updated
+                    graphicsLayer.remove(editGraphic);
+                    sketchViewModel.update(editGraphic);
+                    break;
+                  }
+                }
+              }
+            });
+          });
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

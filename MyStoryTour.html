@@ -1,0 +1,686 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title></title>
+
+    <link rel="stylesheet" href="//js.arcgis.com/3.27/esri/css/jsapi.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cedarville+Cursive">
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'News Cycle', sans-serif;
+            font-size: 0.90em;
+        }
+
+        #tour {
+            position: absolute;
+            top: 0;
+            background: #FFF;
+            width: 100%;
+            height: 90px;
+            opacity: 0.8;
+            color: #002e5d;
+            z-index: 1;
+        }
+
+        #tour-start{
+            font-size: 28px;
+        }
+
+        #tour-container {
+            margin-left: 30px;
+            font-family: 'Cedarville Cursive', sans-serif;
+            display: inline-block;
+        }
+
+        #route-caption{
+            font-size: 24px;
+            margin-left: 30px;
+            font-family: 'Cedarville Cursive', sans-serif;
+            color:red;
+        }
+
+        #tour-container a {
+            font-weight:bold;
+            color:red;
+        }
+
+        #tour-name {
+            font-size: 30px;
+            margin-left: 30px;
+            margin-top:5px;
+            margin-bottom:5px;
+            display: inline-block
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0.7;
+            display: block;
+            z-index: 32;
+            background-color: black;
+            display: none;
+        }
+
+        #mapcontainer{
+            position: absolute;
+            left: 0;
+            top: 90px;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        #basemap-button{
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .btn-group {
+            position: absolute;
+            text-align: center;
+            max-width:30px;
+            height:30px;
+            left: 21px;
+            top: 180px;
+            z-Index: 31;
+            /* overflow: hidden; */
+        }
+
+        /*-- svg style*/
+        path {
+            opacity: 0;
+        }
+
+        .travelMarker {
+            fill: yellow;
+            opacity: 0.75;
+        }
+
+        .waypoints {
+            fill: none;
+            stroke: none;
+            opacity: .7;
+        }
+
+        .stops {
+            stroke: red;
+            fill: red;
+            opacity: 1;
+        }
+
+        .lineConnect {
+            fill: none;
+            stroke: yellow;
+            stroke-linecap: square;
+            opacity: 0.75;
+            stroke-width: 2px;
+        }
+
+        .locnames {
+            /* fill: black; */
+            /* text-shadow: 1px 1px 1px #FFF, 3px 3px 5px #000; */
+            fill: white;
+            text-shadow: 1px 1px 2px black, 0 0 25px blue, 0 0 5px darkblue;
+            text-shadow: 1 1 5px white;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+
+        /*image style*/
+        ul.gallery {
+            list-style: none;
+            font-family: 'Cedarville Cursive', sans-serif;
+             color: #002e5d;
+            font-weight:bold;
+        }
+
+            ul.gallery img {
+                position: relative;
+                max-width: 80%;
+                margin: auto;
+                display: block;
+                padding: 1% 1% 5% 1%;
+                background: #eee;
+                border: 1px solid #fff;
+                -webkit-transform: rotate(-2deg);
+                -moz-transform: rotate(-2deg);
+            }
+
+            /* Rotate all even images 2 degrees */
+            ul.gallery li:nth-child(even) img {
+                -webkit-transform: rotate(2deg);
+                -moz-transform: rotate(2deg);
+            }
+
+            ul.gallery .ptext {
+                font-size: 2em;
+                position: absolute;
+                bottom: 0;
+                left: 12%;
+                display: none;
+                -webkit-transform: rotate(-2deg);
+                -moz-transform: rotate(-2deg);
+            }
+
+            /* Rotate all even images 2 degrees */
+            ul.gallery li:nth-child(even) .ptext {
+                bottom: 3%;
+                left: 10.5%;
+                -webkit-transform: rotate(2deg);
+                -moz-transform: rotate(2deg);
+            }
+
+            ul.gallery .wrap {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 100%;
+                height: 100%;
+                max-width: 0;
+                max-height: 0;
+                opacity: 0;
+                z-index: 50;
+            }
+
+            ul.gallery .center {
+                position: absolute;
+                margin: 0;
+                top: 50%;
+                left: 50%;
+                margin-right: -50%;
+                transform: translate(-50%, -50%);
+            }
+    </style>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/js-url/1.8.4/url.min.js"></script>
+    <script src="//js.arcgis.com/3.27/"></script>
+
+    <script>
+        require([
+            "esri/map",
+            "esri/dijit/BasemapGallery",
+            "esri/layers/FeatureLayer",
+            "esri/layers/WebTiledLayer",
+            "esri/geometry/screenUtils",
+            "esri/geometry/Extent",
+            "esri/geometry/Circle",
+            "esri/geometry/Point",
+            "esri/geometry/Polyline",
+            "esri/geometry/webMercatorUtils",
+            "esri/graphic",
+            "esri/graphicsUtils",
+            "esri/SpatialReference",
+            "esri/symbols/CartographicLineSymbol",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/TextSymbol",
+            "dojo/_base/array",
+            "dojo/dom",
+            "dojo/dom-construct",
+            "dojo/number",
+            "dojo/on",
+            "dojo/parser",
+            "dojo/ready"
+        ], function (Map, BasemapGallery, FeatureLayer, WebTiledLayer, screenUtils, Extent, Circle, Point, Polyline, webMercatorUtils, Graphic, graphicsUtils,
+            SpatialReference, CartographicLineSymbol, SimpleMarkerSymbol, TextSymbol, array, dom, domconstruct, number, on, parser, ready) {
+                parser.parse();
+
+                //$('#introModal').modal('show');
+
+                let map, webMap, c = 0, path, sr = new SpatialReference({ wkid: 4326 });
+                let pms = new esri.symbol.PictureMarkerSymbol('http://simpleicon.com/wp-content/uploads/camera-64x64.png', 20, 20);
+
+                ready(function () {
+                    //map = new Map("map");
+                    map = new Map("map",{
+                        navigationMode: 'css-transforms'
+                    });
+
+                    map.on("load", loadRoutes);
+                    $(".dropdown-menu a").each(function (index) {
+                        map.addLayer(new WebTiledLayer($(this).attr("data-url"), JSON.parse($(this).attr("data-options"))));
+                    });
+                });
+
+                function loadRoutes() {
+                    let svg = d3.select("#map_gc");
+                    let g = d3.select("#map_graphics_layer");
+                    let currentNode = null;
+
+                    on(map.graphics, "graphic-node-add", function (g) {
+                        if (g.graphic.attributes.css != null) {
+                            d3.select(g.graphic.getNode()).attr("class", g.graphic.attributes.css)
+                        }
+                    });
+
+                    let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
+                    let geoJson = (url('?r') != null) ? url('?r') : gist;
+
+                    let filename = "My Story Tour - " + geoJson.match(/([^\/]+)(?=\.\w+$)/)[0];
+                    let tourname = (url('?t') != null) ? decodeURI(url('?t')) : decodeURI(decodeURI(filename));
+                    $("#tour-name").text(tourname);
+                    //(url('?t') != null) ? $("#tour-name").text(decodeURI(url('?t'))) : $("#tour-name").text(decodeURI(filename));
+
+                    let speed = (url('?s') == "slow") ? 15 : (url('?s') == "fast") ? 5 : 10;
+                    let mapOffset = parseInt($("#mapcontainer").css("top"));
+
+                    d3.json(geoJson, function (collection) {
+                        let pauseValues = { lastT: 0, currentT: 0 };
+
+                        let routes = collection.features.filter(function (d) {
+                            return d.geometry.type == "LineString";
+                        });
+
+                        let stops = [routes[0].geometry.coordinates[0]];
+                        routes.forEach(function (e) {
+                            stops.push(e.geometry.coordinates[e.geometry.coordinates.length - 1]);
+                            let polyline = new Polyline(sr);
+                            polyline.addPath(e.geometry.coordinates);
+                            let attr = { "route": e.properties.Route, "css": "lineConnect", "caption": e.properties.Caption }
+                            map.graphics.add(new Graphic(polyline, new CartographicLineSymbol(), attr));
+                        });
+
+                        //-- Add Labels and graphic points for labels
+                        let labels = collection.features.filter(function (d) {
+                            return d.geometry.type == "Point" && d.properties.Label !== undefined && d.properties.Label !== null;
+                        });
+                        labels.forEach(function (e) {
+                            let pt = new Point(e.geometry.coordinates, sr);
+                            map.graphics.add(new Graphic(pt, new SimpleMarkerSymbol().setSize(16), { "css": "stops" }));
+                            let textSymbol = new TextSymbol(e.properties.Label);
+                            textSymbol.setOffset(0, 15);
+                            map.graphics.add(new Graphic(pt, textSymbol, { "css": "locnames" }));
+                        });
+
+
+                        //-- Add the picture points to the map
+                        let picPts = collection.features.filter(function (d) {
+                            return d.properties.Pic !== undefined && d.properties.Pic != null && d.properties.Pic.length > 0;
+                        });
+                        picPts.forEach(function (e, i) {
+                            let pic = e.properties.Pic;
+                            let caption = e.properties.Caption;
+                            dojo.create("li", { innerHTML: "<div class=\"wrap\"><div class=\"center\"><img class=\"pic\" src=\"" + pic + "\" /><div class=\"ptext\">" + caption + "</div></div></div>" }, "gallery", "last");
+                            let pt = new Point(e.geometry.coordinates, sr);
+                            let attr = { "route": e.properties.Route, "css": "waypoints" }
+                            map.graphics.add(new Graphic(pt, new SimpleMarkerSymbol().setSize(6), attr));
+                        });
+
+                        //-- Create the marker to move along the transition
+                        let marker = g.append("circle")
+                            .attr("r", 10)
+                            .attr("id", "marker")
+                            .attr("class", "travelMarker");
+
+                        //-- Click event to start the tour.
+                        on(dom.byId("tour-start"), "click", function () {
+                            console.log("Starting...");
+                            c = 0;
+                            currentNode = null;
+                            $("#tour-start").hide();
+                            $(".wrap").removeAttr('style');
+                            map.setExtent(graphicsUtils.graphicsExtent([routegraphics[c]]), true).then(function () {
+                                // if (path) {
+                                //     console.log("removing path");
+                                //     //path.transition().remove();
+                                //     //path = null;
+                                // }
+                                pauseValues.lastT = 0;
+                                dojo.forEach(routegraphics, function (r) { $(r.getNode()).css("opacity", "0") });
+                                dojo.forEach(picgraphics, function (p) { p.setSymbol(null); });
+                                transition();
+                            });
+                        });
+
+                        $(".dropdown-menu a").click(function () {
+                            dojo.forEach(map.layerIds, function (id) { map.getLayer(id).hide(); });
+                            map.getLayer($(this).text().trim().toString()).show();
+                        });
+
+                        let routegraphics = dojo.filter(map.graphics.graphics, function (item, index) {
+                            return (item.attributes && item.attributes.css == "lineConnect");
+                        });
+
+                        //-- Set the initial map extent
+                        map.setExtent(graphicsUtils.graphicsExtent(routegraphics), true);
+                        let picgraphics = dojo.filter(map.graphics.graphics, function (item, index) {
+                            return (item.attributes && item.attributes.css == "waypoints");
+                        });
+
+                        //-- Adjust the transitioning marker - not an esri graphic
+                        map.on("zoom-end", function () {
+                            marker.attr("transform",
+                                function () {
+                                    let d = (c == 0) ? stops[0] : stops[stops.length - 1];
+                                    return "translate(" +
+                                        getScreenCoords(d).x + "," +
+                                        getScreenCoords(d).y + ")";
+                                });
+                            d3.selectAll(".waypoints").attr("r", 60);
+                        });
+
+
+
+                        function transition() {
+
+                            path = d3.select(routegraphics[c].getNode());
+                            let dur = (path.node().getTotalLength() * speed);
+
+                            path.transition()
+                                .duration(dur)
+                                .ease("linear")
+                                .attrTween("stroke-dasharray", tweenDash(path.node()))
+                                .each("start", function () {
+                                    d3.select(this).style("opacity", "0.95");
+                                    $("#route-caption").text($(routegraphics[c])[0].attributes.caption);
+                                })
+                                .each("end", function () {
+                                     nextRoute();
+                                });
+                        } //end transition
+
+
+                        function tweenDash(pathNode) {
+                            return function () {
+                                return function (t) {
+
+                                    t += pauseValues.lastT;
+
+                                    //-- total length of path (single value)
+                                    let l = pathNode.getTotalLength();
+                                    interpolate = d3.interpolateString("0," + l, l + "," + l);
+
+                                    // p is the point on the line (coordinates) at a given length
+                                    // along the line. In this case if l=50 and we're midway through
+                                    // the time then this would 25.
+                                    let p = pathNode.getPointAtLength(t * l);
+                                    var translate = "translate(" + p.x + "," + p.y + ")";
+
+                                    //-- If the points are no longer changing, then move to the next route.
+                                    if (marker.attr("transform") == translate) {
+                                        nextRoute();
+                                      } else {
+
+                                        marker.attr("transform", translate); //move marker
+                                        pauseValues.currentT = t;
+
+                                        let collideNode = collide(marker.node());
+                                        if (collideNode != null && collideNode != currentNode) {
+                                            currentNode = collideNode;
+                                            let thePic = $(".pic:eq(" + collideNode + ")");
+                                            if (thePic.closest(".wrap").css("top") == "10px") {  //if the pic css is top of 10px it has not been moved yet.
+                                                //Pause the route at the second interval of currentT
+                                                path.transition().duration(0).each("start", function () {
+                                                    pauseValues.lastT = pauseValues.currentT;
+                                                })
+
+                                                picgraphics[collideNode].setSymbol(pms);
+                                                let top = 5 + (collideNode * ((window.innerHeight - 200) / picPts.length));
+
+                                                let sc = getScreenCoords(picPts[collideNode].geometry.coordinates);
+                                                let num = Math.floor(Math.random() * 10) - 5;
+
+                                                $('#overlay').fadeIn(1000).delay(4000).fadeOut(500);
+
+                                                thePic.closest(".wrap").css({
+                                                    "top": sc.y,
+                                                    "right": window.innerWidth - sc.x,
+                                                }).animate({
+                                                    'right': '5%',
+                                                    'top': '5%',
+                                                    'max-width': '90%',
+                                                    'max-height': '90%',
+                                                    'opacity': '1'
+                                                }, 1000, showCaption)
+                                                    .delay(4000)
+                                                    .animate({
+                                                        'right': (num + 10) + "px",
+                                                        'top': top,
+                                                        'max-width': '20%',
+                                                        'max-height': '20%'
+                                                    }, 500, function () {
+                                                        transition();
+                                                    });
+                                            }
+                                        }
+                                    }
+                                    return interpolate(t);
+                                };
+                            };
+                        } //end tweenDash
+
+                        function nextRoute() {
+                            path.transition().duration(0);
+                            pauseValues.lastT = 0;
+                            if (c < routegraphics.length - 1) {
+                                c++
+                                map.setExtent(graphicsUtils.graphicsExtent([routegraphics[c]]), true).then(function () {
+
+                                    dojo.forEach(routegraphics, function (r, i) {
+                                        if (i < c){
+                                            $(r.getNode()).css("opacity", ".5") 
+                                        }else{
+                                            $(r.getNode()).css("opacity", "0") 
+                                        }
+                                    });
+                                    d3.select(this).call(transition);
+                                });
+                            } else {
+                                $("#route-caption").text("");
+                                $("#tour-start").show();
+                                dojo.forEach(routegraphics, function (r) { $(r.getNode()).css("opacity", ".75") });
+                            }
+                        }
+
+
+                        function showCaption() {
+                            $(this).find('.ptext').fadeIn(100).delay(3900).fadeOut();
+                        };
+
+                        function collide(node) {
+                            let x = node.getScreenCTM().e,
+                                y = node.getScreenCTM().f
+                            let colliding = null;
+                            $.each(picPts, function (i, e) {
+                                let coords = getScreenCoords(e.geometry.coordinates);
+                                let nx1 = coords.x - 10;
+                                let nx2 = coords.x + 10;
+                                let ny1 = (coords.y + mapOffset) - 10;
+                                let ny2 = (coords.y + mapOffset) + 10;
+                                if (x > nx1 && x < nx2 && y > ny1 && y < ny2) {
+                                    if (routes[c].properties.Route == e.properties.Route) {
+                                        colliding = i;
+                                        return false;
+                                    }
+                                }
+                            });
+                            return colliding;
+                        }
+
+                        function getScreenCoords(p) {
+                            return map.toScreen(webMercatorUtils.geographicToWebMercator(new Point(p, sr)));
+                        }
+
+                        function getExent(p1, p2) {
+                            return new Extent(p1[0], p1[1], p2[0], p2[1], sr);
+                        }
+                    });
+                }
+            });
+    </script>
+</head>
+
+<body>
+
+
+    <!-- <div class="btn-group"> -->
+    <div class="btn-group">
+        <button id="basemap-button" type="button" class="btn btn-sm dropdown-toggle" data-toggle="dropdown">
+            <!-- Basemaps
+                <span class="caret"></span> -->
+
+            <span class="glyphicon glyphicon-th" aria-hidden="true"></span>
+        </button>
+
+
+        <ul class="dropdown-menu">
+            <!-- <li>
+                    <a href="#" data-options='{ "id": "Cloudmade Midnight", "visible": false, "copyright": "Cloudmade Midnight Commander" }'
+                       data-url="http://tile.cloudmade.com/1a1b06b230af4efdbb989ea99e9841af/999/256/${level}/${col}/${row}.png">
+                        Cloudmade Midnight
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="#" data-options='{ "id": "Cloudmade Pale", "visible": false, "subDomains": ["a", "b", "c"], "copyright": "Cloudmade Pale Dawn" }'
+                       data-url="http://${subDomain}.tile.cloudmade.com/1a1b06b230af4efdbb989ea99e9841af/998/256/${level}/${col}/${row}.png">
+                        Cloudmade Pale
+                    </a>
+                </li> -->
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Run/Bike/Hike", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://${subDomain}.tiles.mapbox.com/v4/mapbox.run-bike-hike/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Run/Bike/Hike
+                </a>
+            </li>
+
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Outdoors", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://${subDomain}.tiles.mapbox.com/v4/mapbox.outdoors/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Outdoors
+                </a>
+            </li>
+
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Satellite", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://${subDomain}.tiles.mapbox.com/v4/mapbox.satellite/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    Satellite
+                </a>
+            </li>
+
+
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Pirates", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://${subDomain}.tiles.mapbox.com/v4/mapbox.pirates/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Pirates
+                </a>
+            </li>
+
+
+            <li>
+                <a href="#" data-options='{ "id": "MapBox Dark", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "MapBox" }'
+                    data-url="http://${subDomain}.tiles.mapbox.com/v4/mapbox.dark/${level}/${col}/${row}.png?access_token=pk.eyJ1Ijoic2hhZGMiLCJhIjoiZjRUSnJTYyJ9.gUL3T1N9m_twjfHArn-UNw">
+                    MapBox Dark
+                </a>
+            </li>
+
+            <li>
+                <a href="#" data-options='{"id": "National Geographic", "visible": false, "subDomains": ["services", "server"],
+        "copyright": "National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC"}'
+                    data-url="http://${subDomain}.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/${level}/${row}/${col}">
+                    National Geographic
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{"id": "Esri World Imagery", "visible": true, "subDomains": ["services", "server"],
+        "copyright": "Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community "}'
+                    data-url="http://${subDomain}.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${row}/${col}">
+                    Esri World Imagery
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{"id": "Esri World Topo", "visible": false, "subDomains": ["services", "server"],
+        "copyright": "Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community "}'
+                    data-url="http://${subDomain}.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${level}/${row}/${col}">
+                    Esri World Topo
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{"id": "Esri Street Map", "visible": false, "subDomains": ["services", "server"],
+        "copyright": "Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community "}'
+                    data-url="http://${subDomain}.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${level}/${row}/${col}">
+                    Esri Street Map
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{ "id": "Stamen Watercolor", "visible": false, "subDomains": ["a", "b", "c", "d"], "copyright": "Stamen Watercolor" }'
+                    data-url="http://${subDomain}.tile.stamen.com/watercolor/${level}/${col}/${row}.jpg">
+                    Stamen Watercolor
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{ "id": "Open Cycle Map", "visible": false, "subDomains": ["a", "b", "c"], "copyright": "Open Cycle Map" }'
+                    data-url="http://${subDomain}.tile.opencyclemap.org/cycle/${level}/${col}/${row}.png">
+                    Open Cycle Map
+                </a>
+            </li>
+            <li>
+                <a href="#" data-options='{ "id": "Open Street Map", "visible": false, "copyright": "Apples rendering of OSM data." }'
+                    data-url="http://gsp2.apple.com/tile?api=1&style=slideshow&layers=default&lang=en_GB&z=${level}&x=${col}&y=${row}&v=9">
+                    Open Street Map
+                </a>
+            </li>
+
+        </ul>
+    </div>
+    <!-- </div> -->
+
+    <div id="tour">
+        <div id="tour-name"></div>
+        <div id="tour-container">
+            <a href="#" id="tour-start">Click here to start tour...</a>
+            <!-- <span id="route-caption"></span> -->
+        </div>
+        <div id="route-caption"></div>
+    </div>
+
+    <div id="mapcontainer">
+        <div id="map"></div>
+    </div>
+
+    <div id="overlay"></div>
+    <ul class="gallery" id="gallery"></ul>
+
+
+    <div id="introModal" class="modal fade" role="dialog" aria-labelledby="gridSystemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Welcome to My Story Tour</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Welcome to my story. Follow along my journey and check out my pictures.
+                    </p>
+                    <a href="#" id="tour-start">Click here to start tour...</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
