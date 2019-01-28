@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Intro to SceneView - Create a 3D map</title>
+    <title>My 3D Story Tour</title>
 
     <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
@@ -12,18 +12,22 @@
 
     <style>
         html,
-    body,
-    #viewDiv {
-        position: absolute;
+        body,
+        #viewDiv {
+            height: 100%;
+            width: 100%;
+        }
+    
+        #mapcontainer {
+            position: absolute;
             left: 0;
             top: 90px;
             bottom: 0;
             width: 100%;
-    }
-
-
+        }
+   
         #tour {
-            position: absolute;
+            position: relative;
             top: 0;
             background: #FFF;
             width: 100%;
@@ -32,49 +36,136 @@
             color: #002e5d;
             z-index: 1;
         }
-
-        #tour-start{
+    
+        #tour-start {
             font-size: 28px;
         }
-
+    
         #tour-container {
             margin-left: 30px;
             font-family: 'Cedarville Cursive', sans-serif;
             display: inline-block;
         }
-
+    
         #tour-container a {
-            font-weight:bold;
-            color:red;
+            font-weight: bold;
+            color: red;
         }
-
+    
         #tour-name {
             font-size: 30px;
             margin-left: 30px;
-            margin-top:5px;
-            margin-bottom:5px;
+            margin-top: 5px;
+            margin-bottom: 5px;
             display: inline-block
+        }
+    
+        #route-caption{
+            font-size: 24px;
+            margin-left: 30px;
+            font-family: 'Cedarville Cursive', sans-serif;
+            color:red;
+        }
+
+        #basemap-button {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+    
+        .btn-group {
+            position: absolute;
+            text-align: center;
+            max-width: 30px;
+            height: 30px;
+            left: 15px;
+            top: 300px;
+            z-Index: 31;
+            /* overflow: hidden; */
         }
 
 
 
-    #basemap-button {
-        padding-left: 8px;
-        padding-right: 8px;
-    }
 
-    .btn-group {
-        position: absolute;
-        text-align: center;
-        max-width: 30px;
-        height: 30px;
-        left: 15px;
-        top: 210px;
-        z-Index: 31;
-        /* overflow: hidden; */
-    }
+        #overlay {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0.7;
+            display: block;
+            z-index: 32;
+            background-color: black;
+            display: none;
+        }
 
-</style>
+
+
+                /*image style*/
+                ul.gallery {
+            list-style: none;
+            font-family: 'Cedarville Cursive', sans-serif;
+             color: #002e5d;
+            font-weight:bold;
+        }
+
+            ul.gallery img {
+                position: relative;
+                max-width: 80%;
+                margin: auto;
+                display: block;
+                padding: 1% 1% 5% 1%;
+                background: #eee;
+                border: 1px solid #fff;
+                -webkit-transform: rotate(-2deg);
+                -moz-transform: rotate(-2deg);
+            }
+
+            /* Rotate all even images 2 degrees */
+            ul.gallery li:nth-child(even) img {
+                -webkit-transform: rotate(2deg);
+                -moz-transform: rotate(2deg);
+            }
+
+            ul.gallery .ptext {
+                font-size: 2em;
+                position: absolute;
+                bottom: 0;
+                left: 12%;
+                display: none;
+                -webkit-transform: rotate(-2deg);
+                -moz-transform: rotate(-2deg);
+            }
+
+            /* Rotate all even images 2 degrees */
+            ul.gallery li:nth-child(even) .ptext {
+                bottom: 3%;
+                left: 10.5%;
+                -webkit-transform: rotate(2deg);
+                -moz-transform: rotate(2deg);
+            }
+
+            ul.gallery .wrap {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 100%;
+                height: 100%;
+                max-width: 0;
+                max-height: 0;
+                opacity: 0;
+                z-index: 50;
+            }
+
+            ul.gallery .center {
+                position: absolute;
+                margin: 0;
+                top: 50%;
+                left: 50%;
+                margin-right: -50%;
+                transform: translate(-50%, -50%);
+            }
+    </style>
 
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
@@ -85,13 +176,6 @@
     <script src="https://js.arcgis.com/4.10/"></script>
 
     <script>
-        dojoConfig = {
-            async: true,
-            gfxRenderer: "svg" // svg gets priority
-        };
-    </script>
-
-    <script>
         require([
             "esri/layers/WebTileLayer",
             "esri/Map",
@@ -100,88 +184,47 @@
             "esri/layers/GraphicsLayer",
             "esri/Graphic",
             "esri/layers/FeatureLayer",
-            "esri/layers/support/Field"
-        ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field) {
+            "esri/layers/support/Field",
+            "dojo/on",
+            "dojo/dom",
+            "esri/geometry/Extent",
+            "dojo/dom-construct",
+            "esri/geometry/support/webMercatorUtils"
+        ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field, on, dom, Extent, domConstruct, webMercatorUtils) {
+
+
+
             var map = new Map({
                 ground: "world-elevation"
             });
 
-
             var view = new SceneView({
                 container: "viewDiv",     // Reference to the scene div created in step 5
-                map: map,                 // Reference to the map object created before the scene
-                scale: 50000,          // Sets the initial scale to 1:50,000,000
-                center: [-121.649918, 43.98473]  // Sets the center point of view with lon/lat
+                map: map
+                //,                 // Reference to the map object created before the scene
+                //scale: 50000,          // Sets the initial scale to 1:50,000,000
+                //center: [-121.649918, 43.98473]  // Sets the center point of view with lon/lat
             });
-
 
             // Basemap events
             $(".dropdown-menu a").each(function (index) {
                 map.add(new WebTileLayer($(this).attr("data-url"), JSON.parse($(this).attr("data-options"))));
             });
 
-            $(".dropdown-menu a").click(function () {
-
-                
-
-
-                let layerId = JSON.parse($(this).attr("data-options")).id;
-                map.layers.forEach(function (layer, i) {
-                    if (layer.type =="web-tile"){
-                        layer.visible = (layer.id == layerId) ? true : false;
-                    }
-                })
-            });
-
-            var graphicsLayer = new GraphicsLayer();
-            map.add(graphicsLayer);
-
-
-
-
-      // First create a point geometry (this is the location of the Titanic)
-      var point = {
-        type: "point", // autocasts as new Point()
-        longitude: -121.649918,
-        latitude: 43.98473
-      };
-
-      // Create a symbol for drawing the point
-      var markerSymbol = {
-        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-        color: [226, 119, 40],
-        outline: { // autocasts as new SimpleLineSymbol()
-          color: [255, 255, 255],
-          width: 2
-        }
-      };
-
-      // Create a graphic and add the geometry and symbol to it
-      var pointGraphic = new Graphic({
-        geometry: point,
-        symbol: markerSymbol
-      });
-
-
-
-graphicsLayer.add(pointGraphic);
-
-
-
-
-
-
-
-
             let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
             let geoJson = (url('?r') != null) ? url('?r') : gist;
+            let filename = "My 3D Story Tour - " + geoJson.match(/([^\/]+)(?=\.\w+$)/)[0];
+            let tourname = (url('?t') != null) ? decodeURI(url('?t')) : decodeURI(decodeURI(filename));
+            $("#tour-name").text(tourname);
 
             d3.json(geoJson, function (collection) {
 
+                //-- Get the GeoJson routes
                 let routes = collection.features.filter(function (d) {
                     return d.geometry.type == "LineString";
                 });
 
+                //-- Convert the GeoJson routes to FeatureLayer geometry.
                 let routeFeatures = [];
                 routes.forEach(function (r, i) {
                     let polyline = {
@@ -194,17 +237,19 @@ graphicsLayer.add(pointGraphic);
                     routeFeatures.push({ geometry: polyline, attributes: atts })
                 });
 
+                let lineSymbol = {
+                    type: "simple-line",  // autocasts as new SimpleLineSymbol()
+                    color: [0, 255, 255, .75],
+                    width: 1.5,
+                    style: "solid"
+                }
 
+                //-- Create a Routes FeatureLayer
                 var routelayer = new FeatureLayer({
                     source: routeFeatures,  // autocast as a Collection of new Graphic()
                     renderer: {
                         type: "simple",  // autocasts as new SimpleRenderer()
-                        symbol: {
-                                type: "simple-line",  // autocasts as new SimpleLineSymbol()
-                                color: [255,255, 0, .5],
-                                width: "1px",
-                                style: "solid"
-                        }
+                        symbol: lineSymbol
                     },
                     fields: [
                         new Field({
@@ -220,14 +265,52 @@ graphicsLayer.add(pointGraphic);
                 });
                 map.add(routelayer);
 
-         
+                routelayer.queryExtent().then(function (response) {
+                    // go to the extent of all the graphics in the layer view
+                    view.goTo(response.extent.expand(2));
+                });
 
 
-                //-- Add Labels and graphic points for labels
+                //view.goTo(routelayer.fullExtent.expand(2));
+
+                //-- Add the picture points to the map
+                let picPts = collection.features.filter(function (d) {
+                    return d.properties.Pic !== undefined && d.properties.Pic != null && d.properties.Pic.length > 0;
+                });
+                let picFeatures = [];
+                picPts.forEach(function (p, i) {
+                    let pic = p.properties.Pic;
+                    let caption = p.properties.Caption;
+                    domConstruct.create("li", { innerHTML: "<div class=\"wrap\"><div class=\"center\"><img class=\"pic\" src=\"" + pic + "\" /><div class=\"ptext\">" + caption + "</div></div></div>" }, "gallery", "last");
+                    let pt = { type: "point", x: p.geometry.coordinates[0], y: p.geometry.coordinates[1] };
+                    let atts = {}
+                    atts.OBJECTID = i;
+                    atts.Route = p.properties.Route
+                    picFeatures.push({ geometry: pt, attributes: atts })
+                });
+
+
+                let piclayer = new FeatureLayer({
+                    source: picFeatures,  // autocast as a Collection of new Graphic()
+                    renderer: {
+                        type: "simple",  // autocasts as new SimpleRenderer()
+                        symbol: {
+                            type: "picture-marker",  // autocasts as new SimpleMarkerSymbol()
+                            url: "images/camera-64x64.png",
+                            width: "20px",
+                            height: "20px"
+                        }
+                    },
+                    objectIdField: "OBJECTID",  // field name of the Object IDs
+                });
+                map.add(piclayer);
+
+
+                //-- Get the GeoJson label points
                 let labels = collection.features.filter(function (d) {
                     return d.geometry.type == "Point" && d.properties.Label !== undefined && d.properties.Label !== null;
                 });
-
+                //-- Convert the GeoJson labels to FeatureLayer geometry.
                 let labelFeatures = [];
                 labels.forEach(function (e, i) {
                     let pt = { type: "point", x: e.geometry.coordinates[0], y: e.geometry.coordinates[1] };
@@ -236,8 +319,8 @@ graphicsLayer.add(pointGraphic);
                     atts.LABEL = e.properties.Label
                     labelFeatures.push({ geometry: pt, attributes: atts })
                 });
-
-                var layer = new FeatureLayer({
+                //-- Create a labels FeatureLayer
+                var labelsLayer = new FeatureLayer({
                     source: labelFeatures,  // autocast as a Collection of new Graphic()
                     featureReduction: {
                         type: "selection"
@@ -287,8 +370,8 @@ graphicsLayer.add(pointGraphic);
                             // Labels need a small vertical offset that will be used by the callout
                             verticalOffset: {
                                 screenLength: 50,
-                                maxWorldLength: 2000,
-                                minWorldLength: 30
+                                maxWorldLength: 1000,
+                                minWorldLength: 10
                             },
                             // The callout has to have a defined type (currently only line is possible)
                             // The size, the color and the border color can be customized
@@ -303,74 +386,237 @@ graphicsLayer.add(pointGraphic);
                         }
                     }]
                 });
-                map.add(layer);
+                map.add(labelsLayer);
 
 
+                // GRAPHICS FOR ANIMATIONS
+                var graphicsLayer = new GraphicsLayer();
+                var currentElevationInfo = {
+                    mode: "relative-to-ground",
+                    offset: 10,
+                    unit: "feet"
+                };
+                graphicsLayer.elevationInfo = currentElevationInfo;
+                map.add(graphicsLayer);
+
+                //-- Moving Line
+                var polyline = {
+                    type: "polyline", // autocasts as new Polyline()
+                    paths: []
+                };
+                let polylineGraphic = new Graphic({
+                    geometry: polyline,
+                    symbol: lineSymbol
+                });
+                graphicsLayer.add(polylineGraphic);
 
 
-
-
-
-            let line = turf.lineString(routes[0].geometry.coordinates);
-            let length = turf.length(line, {units: 'feet'});
-            let interval = length/1000;
-            let along = [];
-            for (i = 0; i < 1001; i++) {
-                along.push(turf.along(line, (i*interval), {units: 'feet'}))
-            }
-
-            var tour = setInterval(startTour,20);
-            
-            console.log(along);
-
-            t = 0;
-            function startTour(){
+                // -- Moving Circle
                 var point = {
                     type: "point", // autocasts as new Point()
-                    longitude: along[t].geometry.coordinates[0],
-                    latitude: along[t].geometry.coordinates[1]
+                    longitude: routes[0].geometry.coordinates[0][0],
+                    latitude: routes[0].geometry.coordinates[0][1]
                 };
-                console.log(point);
-                pointGraphic.geometry = point;
-                t++
-                if (t > 1000) clearInterval(tour);
-            }
+                var markerSymbol = {
+                    type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                    color: [0, 255, 255, .25],
+                    outline: { // autocasts as new SimpleLineSymbol()
+                        color: [0, 255, 255, 1],
+                        width: "1px"
+                    }
+                };
+                var pointGraphic = new Graphic({
+                    geometry: point,
+                    symbol: markerSymbol
+                });
+                graphicsLayer.add(pointGraphic);
+
+
+                let interval = null, r = 0, routeCoords = [], routePics = [];
+                //-- Start the route.
+                function startRoute() {
+
+                    routelayer.definitionExpression = "ObjectID <= " + r;
+
+                    //-- Get the current route;
+                    if (r == routes.length) {
+                        $("#route-caption").text("");
+                        $("#tour-start").show();
+                        return;
+                    }
+                    route = routes[r];
+
+                    $("#route-caption").text(route.properties.Caption);
+
+                    routePics = picFeatures.filter(function (d) {
+                        return d.attributes.Route == route.properties.Route;
+                    });
+
+                    //-- Interpolate GeoJson line and create array of points.    
+                    let line = turf.lineString(route.geometry.coordinates);
+                    let length = turf.length(line, { units: 'feet' });
+                    let positions = length / 1000;
+                    for (i = 0; i < 1001; i++) {
+                        routeCoords.push(turf.along(line, (i * positions), { units: 'feet' }))
+                    }
+
+                    var bbox = turf.bbox(line);
+                    var lineExtent = new Extent({
+                        xmin: bbox[0],
+                        ymin: bbox[1],
+                        xmax: bbox[2],
+                        ymax: bbox[3]
+                    })
+
+                    view.goTo(lineExtent.expand(1.5));
+                    interval = setInterval(startInterval, 20);
+                }
+
+
+                let paths = [], c = 0, currentNode = null;
+                //-- Start moving the graphics and detecting collisions
+                function startInterval() {
+
+                    let x = routeCoords[c].geometry.coordinates[0];
+                    let y = routeCoords[c].geometry.coordinates[1];
+
+                    var point = {
+                        type: "point", // autocasts as new Point()
+                        longitude: x,
+                        latitude: y
+                    };
+
+                    paths.push([x, y]);
+                    var pline = {
+                        type: "polyline",  // autocasts as new Polyline()
+                        paths: paths
+                    };
+                    pointGraphic.geometry = point;
+                    polylineGraphic.geometry = pline;
+                    c++
+
+                    // -- If there are pics to display, start detecting for collision
+                    if (routePics.length > 0) {
+                        let collideNode = collide(x, y);
+                        if (collideNode != null && collideNode != currentNode) {
+                            clearInterval(interval);
+                            currentNode = collideNode;
+                            //possibly remove the node from the routePics so overlapping routes would not trigger this again.
+                            piclayer.definitionExpression = "OBJECTID <= " + currentNode;
+                            let thePic = $(".pic:eq(" + collideNode + ")");
+                            let top = 5 + (collideNode * ((window.innerHeight - 200) / picFeatures.length));
+                            let sc = getScreenCoords(x, y);
+                            let num = Math.floor(Math.random() * 10) - 5;
+                            $('#overlay').fadeIn(1000).delay(4000).fadeOut(500);
+                            thePic.closest(".wrap").css({
+                                "top": sc.y,
+                                "right": window.innerWidth - sc.x,
+                            }).animate({
+                                'right': '5%',
+                                'top': '5%',
+                                'max-width': '90%',
+                                'max-height': '90%',
+                                'opacity': '1'
+                            }, 1000, showCaption)
+                                .delay(4000)
+                                .animate({
+                                    'right': (num + 10) + "px",
+                                    'top': top,
+                                    'max-width': '20%',
+                                    'max-height': '20%'
+                                }, 500, function () {
+                                    interval = setInterval(startInterval, 20);
+                                });
+                        }
+                    }
+                    //-- end of route, move to next route.
+                    if (c > 1000) {
+                        clearInterval(interval);
+                        interval = null;
+                        paths = [];
+                        routeCoords = [];
+                        c = 0;
+                        r++;
+                        setTimeout(function () { startRoute(); }, 1000);
+                    }
+                }
+
+                //-- Determine if coordinates collide with a picture.
+                function collide(x, y) {
+                    let colliding = null;
+                    $.each(routePics, function (i, e) {
+                        let coords = e.geometry;
+                        if (turf.distance(turf.point([x, y]), turf.point([coords.x, coords.y]), { units: 'feet' }) < 50) {
+                            colliding = e.attributes.OBJECTID;
+                            return false;
+                        }
+                    });
+                    return colliding;
+                }
+
+                //-- Show the caption.
+                function showCaption() {
+                    $(this).find('.ptext').fadeIn(100).delay(3900).fadeOut();
+                };
+
+                //-- Convert coordinates to screen pixels
+                function getScreenCoords(x, y) {
+                    var point = {
+                        type: "point", // autocasts as new Point()
+                        x: x,
+                        y: y,
+                        spatialReference: { wkid: 4326 }  // autocasts as new SpatialReference()
+                    };
+                    return view.toScreen(webMercatorUtils.geographicToWebMercator(point));
+                }
 
 
 
+                $(".dropdown-menu a").click(function () {
+                    let layerId = JSON.parse($(this).attr("data-options")).id;
+                    map.layers.forEach(function (layer, i) {
+                        if (layer.type == "web-tile") {
+                            layer.visible = (layer.id == layerId) ? true : false;
+                        }
+                    })
+                });
 
-
-            
-            // setTimeout(function(){ 
-
-            //     var point = {
-            //         type: "point", // autocasts as new Point()
-            //         longitude: -121.659918,
-            //         latitude: 43.99473
-            //     };
-
-            //     //-121.649918, 43.98473
-                
-            //     //console.log(pointGraphic);
-            //     pointGraphic.geometry = point;
-            //     console.log("done");
-            //  }, 10000);
+                //-- Click event to start the tour.
+                on(dom.byId("tour-start"), "click", function () {
+                    if (interval != null) return;
+                    r = 0;
+                    $("#tour-start").hide();
+                    $(".wrap").removeAttr('style');
+                    startRoute();
+                });
 
 
 
             });
-       });
+
+
+
+        });
     </script>
 </head>
 
 <body>
-    <div id="viewDiv"></div>
 
+    <div id="mapcontainer">
+        <div id="viewDiv"></div>
+    </div>
 
+    <div id="tour">
+        <div id="tour-name"></div>
+        <div id="tour-container">
+            <a href="#" id="tour-start">Click here to start tour...</a>
+            <!-- <span id="route-caption"></span> -->
+        </div>
+        <div id="route-caption"></div>
+    </div>
 
-
-
-
+    <div id="overlay"></div>
+    <ul class="gallery" id="gallery"></ul>
 
     <!-- <div class="btn-group"> -->
     <div class="btn-group">
