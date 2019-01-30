@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cedarville+Cursive">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.0/css/bootstrap-slider.min.css">
+    
 
     <style>
         html,
@@ -83,8 +85,13 @@
             /* overflow: hidden; */
         }
 
-
-
+        .slider{
+            position: absolute;
+            left: 18px;
+            top: 275px;
+            z-Index: 31;
+            /* overflow: hidden; */  
+        }
 
         #overlay {
             position: absolute;
@@ -100,9 +107,8 @@
         }
 
 
-
-                /*image style*/
-                ul.gallery {
+         /*image style*/
+        ul.gallery {
             list-style: none;
             font-family: 'Cedarville Cursive', sans-serif;
              color: #002e5d;
@@ -155,6 +161,7 @@
                 max-height: 0;
                 opacity: 0;
                 z-index: 50;
+                overflow: hidden;
             }
 
             ul.gallery .center {
@@ -173,6 +180,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/js-url/1.8.4/url.min.js"></script>
     <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.0/bootstrap-slider.min.js'></script>
     <script src="https://js.arcgis.com/4.10/"></script>
 
     <script>
@@ -193,7 +201,6 @@
         ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field, on, dom, Extent, domConstruct, webMercatorUtils) {
 
 
-
             var map = new Map({
                 ground: "world-elevation"
             });
@@ -212,9 +219,11 @@
             });
 
             let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
-            let geoJson = (url('?r') != null) ? url('?r') : gist;
+            let geoJson = (url('?route') != null) ? url('?route') : gist;
             let filename = "My 3D Story Tour - " + geoJson.match(/([^\/]+)(?=\.\w+$)/)[0];
-            let tourname = (url('?t') != null) ? decodeURI(url('?t')) : decodeURI(decodeURI(filename));
+            let tourname = (url('?tourName') != null) ? decodeURI(url('?tourName')) : decodeURI(decodeURI(filename));
+            let labelIcon = (url('?labelIcon') != null) ? decodeURI(url('?labelIcon')) : null;
+    
             $("#tour-name").text(tourname);
 
             d3.json(geoJson, function (collection) {
@@ -289,7 +298,6 @@
                     picFeatures.push({ geometry: pt, attributes: atts })
                 });
 
-
                 let piclayer = new FeatureLayer({
                     source: picFeatures,  // autocast as a Collection of new Graphic()
                     renderer: {
@@ -319,13 +327,20 @@
                     atts.LABEL = e.properties.Label
                     labelFeatures.push({ geometry: pt, attributes: atts })
                 });
-                //-- Create a labels FeatureLayer
-                var labelsLayer = new FeatureLayer({
-                    source: labelFeatures,  // autocast as a Collection of new Graphic()
-                    featureReduction: {
-                        type: "selection"
-                    },
-                    renderer: {
+
+                 
+                 let labelRenderer = (labelIcon != null) ?
+                     {
+                        type: "simple",  // autocasts as new SimpleRenderer()
+                        symbol: {
+                            type: "picture-marker",  // autocasts as new SimpleMarkerSymbol()
+                            url: labelIcon,
+                            width: "30px",
+                            height: "30px"
+                        }
+                    }
+                 :
+                     {
                         type: "simple",  // autocasts as new SimpleRenderer()
                         symbol: {
                             type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
@@ -336,7 +351,16 @@
                                 width: "1px"
                             }
                         }
+                    };
+                 
+
+                //-- Create a labels FeatureLayer
+                var labelsLayer = new FeatureLayer({
+                    source: labelFeatures,  // autocast as a Collection of new Graphic()
+                    featureReduction: {
+                        type: "selection"
                     },
+                    renderer: labelRenderer,
                     fields: [
                         new Field({
                             name: "ObjectID",
@@ -432,7 +456,9 @@
                 graphicsLayer.add(pointGraphic);
 
 
-                let interval = null, r = 0, routeCoords = [], routePics = [];
+
+                let interval = null, r = 0, routeCoords = [], routePics = [], intTime = null;
+                let rate = $("#slider").attr("data-slider-value"); routeLength = 0;
                 //-- Start the route.
                 function startRoute() {
 
@@ -440,7 +466,7 @@
 
                     //-- Get the current route;
                     if (r == routes.length) {
-                        $("#route-caption").text("");
+                        $("#route-caption").text("The End!");
                         $("#tour-start").show();
                         return;
                     }
@@ -454,13 +480,19 @@
 
                     //-- Interpolate GeoJson line and create array of points.    
                     let line = turf.lineString(route.geometry.coordinates);
-                    let length = turf.length(line, { units: 'feet' });
-                    let positions = length / 1000;
+                    routeLength = turf.length(line, { units: 'feet' });
+                    let positions = routeLength / 1000;
                     for (i = 0; i < 1001; i++) {
                         routeCoords.push(turf.along(line, (i * positions), { units: 'feet' }))
                     }
 
+                    
+                    let miles = routeLength/5280;
+                    console.log("Miles ", miles, " Rate ", rate);
+                    intTime = ((miles / rate) *  3600); //50 miles per hour
+                    console.log("Seconds ", intTime);
                     var bbox = turf.bbox(line);
+
                     var lineExtent = new Extent({
                         xmin: bbox[0],
                         ymin: bbox[1],
@@ -468,8 +500,10 @@
                         ymax: bbox[3]
                     })
 
-                    view.goTo(lineExtent.expand(1.5));
-                    interval = setInterval(startInterval, 20);
+                    view.goTo(lineExtent.expand(1.5)).then(function(){
+                        console.log(intTime);
+                        interval = setInterval(startInterval, intTime);
+                    })
                 }
 
 
@@ -495,6 +529,26 @@
                     polylineGraphic.geometry = pline;
                     c++
 
+                    if (c < 1000){
+                        let nextX = routeCoords[c + 1].geometry.coordinates[0];
+                        let nextY = routeCoords[c + 1].geometry.coordinates[1];
+
+                        let bearing = turf.bearing(turf.point([x, y]), turf.point([nextX, nextY]));
+                        
+                        console.log("bearing", bearing);
+                        console.log("heading", view.camera.heading)
+
+                        // view.goTo({
+                        //     position: [ x, y, 7000 ],
+                        //     heading = bearing
+                        // });
+
+                    }
+
+
+
+
+
                     // -- If there are pics to display, start detecting for collision
                     if (routePics.length > 0) {
                         let collideNode = collide(x, y);
@@ -511,12 +565,13 @@
                             thePic.closest(".wrap").css({
                                 "top": sc.y,
                                 "right": window.innerWidth - sc.x,
+                                'overflow': 'visible'
                             }).animate({
                                 'right': '5%',
                                 'top': '5%',
                                 'max-width': '90%',
                                 'max-height': '90%',
-                                'opacity': '1'
+                                'opacity': '1',
                             }, 1000, showCaption)
                                 .delay(4000)
                                 .animate({
@@ -525,7 +580,7 @@
                                     'max-width': '20%',
                                     'max-height': '20%'
                                 }, 500, function () {
-                                    interval = setInterval(startInterval, 20);
+                                    interval = setInterval(startInterval, intTime);
                                 });
                         }
                     }
@@ -570,8 +625,6 @@
                     return view.toScreen(webMercatorUtils.geographicToWebMercator(point));
                 }
 
-
-
                 $(".dropdown-menu a").click(function () {
                     let layerId = JSON.parse($(this).attr("data-options")).id;
                     map.layers.forEach(function (layer, i) {
@@ -590,7 +643,24 @@
                     startRoute();
                 });
 
+                $("#slider").slider({
+                    reversed : true,
+                    tooltip: 'always',
+                    formatter: function(value) {
+                        return value + " mph";
+                    }
 
+                }).on("change", function(sliderValue) {
+                    rate = sliderValue.value.newValue;
+                    let miles = routeLength/5280;
+                    if (miles > 0){
+                        console.log("Miles ", miles, " Rate ", rate);
+                        intTime = ((miles / rate) *  3600); //50 miles per hour
+                        console.log("Seconds ", intTime);
+                        clearInterval(interval);
+                        interval = setInterval(startInterval, intTime);
+                    }
+                });
 
             });
 
@@ -604,6 +674,7 @@
 
     <div id="mapcontainer">
         <div id="viewDiv"></div>
+        <input id="slider" type="text" data-slider-min="90" data-slider-max="900" data-slider-step="30" data-slider-value="120" data-slider-orientation="vertical"/>
     </div>
 
     <div id="tour">
@@ -617,6 +688,10 @@
 
     <div id="overlay"></div>
     <ul class="gallery" id="gallery"></ul>
+
+
+
+
 
     <!-- <div class="btn-group"> -->
     <div class="btn-group">
