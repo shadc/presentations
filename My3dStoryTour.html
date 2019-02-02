@@ -18,6 +18,7 @@
         #viewDiv {
             height: 100%;
             width: 100%;
+            overflow:hidden;
         }
     
         #mapcontainer {
@@ -82,7 +83,6 @@
             left: 15px;
             top: 300px;
             z-Index: 31;
-            /* overflow: hidden; */
         }
 
         .slider{
@@ -90,7 +90,6 @@
             left: 18px;
             top: 275px;
             z-Index: 31;
-            /* overflow: hidden; */  
         }
 
         #overlay {
@@ -161,7 +160,6 @@
                 max-height: 0;
                 opacity: 0;
                 z-index: 50;
-                overflow: hidden;
             }
 
             ul.gallery .center {
@@ -174,8 +172,6 @@
             }
     </style>
 
-
-    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/js-url/1.8.4/url.min.js"></script>
@@ -201,16 +197,13 @@
         ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field, on, dom, Extent, domConstruct, webMercatorUtils) {
 
 
-            var map = new Map({
+            let map = new Map({
                 ground: "world-elevation"
             });
 
-            var view = new SceneView({
+            let view = new SceneView({
                 container: "viewDiv",     // Reference to the scene div created in step 5
                 map: map
-                //,                 // Reference to the map object created before the scene
-                //scale: 50000,          // Sets the initial scale to 1:50,000,000
-                //center: [-121.649918, 43.98473]  // Sets the center point of view with lon/lat
             });
 
             // Basemap events
@@ -219,14 +212,17 @@
             });
 
             let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
-            let geoJson = (url('?route') != null) ? url('?route') : gist;
+            let geoJson = (url('?tour') != null) ? url('?tour') : gist;
             let filename = "My 3D Story Tour - " + geoJson.match(/([^\/]+)(?=\.\w+$)/)[0];
             let tourname = (url('?tourName') != null) ? decodeURI(url('?tourName')) : decodeURI(decodeURI(filename));
             let labelIcon = (url('?labelIcon') != null) ? decodeURI(url('?labelIcon')) : null;
-    
+            let droneView = (url('?droneView') == 'true') ? true : false;
+            let skipIntro = (url('?skipIntro') == 'true') ? true : false;
+
             $("#tour-name").text(tourname);
 
-            d3.json(geoJson, function (collection) {
+
+            $.getJSON( geoJson, function( collection ) {
 
                 //-- Get the GeoJson routes
                 let routes = collection.features.filter(function (d) {
@@ -240,21 +236,31 @@
                         type: "polyline", // autocasts as new Polyline()
                         paths: r.geometry.coordinates
                     };
+
+                    r.distance = turf.length(turf.lineString(r.geometry.coordinates), { units: 'feet' });
                     let atts = {}
                     atts.OBJECTID = i;
                     atts.Route = r.properties.Route
                     routeFeatures.push({ geometry: polyline, attributes: atts })
                 });
 
+                //-- Determine split and max speed
+                let split = Math.min.apply(null, routes.map(function(item) {
+                   let d = Math.floor(item.distance / 1000);
+                   //if (d >= 10) return 10;
+                   if (d <= 5) return 5;
+                   return d;
+                }));
+                let maxSpeed = Math.floor((3600000 / (4 * (5280 / split))) / 100) * 100;
+
+                //-- Create a Routes FeatureLayer
                 let lineSymbol = {
                     type: "simple-line",  // autocasts as new SimpleLineSymbol()
                     color: [0, 255, 255, .75],
                     width: 1.5,
                     style: "solid"
                 }
-
-                //-- Create a Routes FeatureLayer
-                var routelayer = new FeatureLayer({
+                let routelayer = new FeatureLayer({
                     source: routeFeatures,  // autocast as a Collection of new Graphic()
                     renderer: {
                         type: "simple",  // autocasts as new SimpleRenderer()
@@ -275,12 +281,12 @@
                 map.add(routelayer);
 
                 routelayer.queryExtent().then(function (response) {
-                    // go to the extent of all the graphics in the layer view
-                    view.goTo(response.extent.expand(2));
+                    if (skipIntro){
+                        view.extent = response.extent.expand(2)
+                    }else{
+                        view.goTo(response.extent.expand(2));
+                    }
                 });
-
-
-                //view.goTo(routelayer.fullExtent.expand(2));
 
                 //-- Add the picture points to the map
                 let picPts = collection.features.filter(function (d) {
@@ -355,7 +361,7 @@
                  
 
                 //-- Create a labels FeatureLayer
-                var labelsLayer = new FeatureLayer({
+                let labelsLayer = new FeatureLayer({
                     source: labelFeatures,  // autocast as a Collection of new Graphic()
                     featureReduction: {
                         type: "selection"
@@ -413,35 +419,37 @@
                 map.add(labelsLayer);
 
 
+
+
                 // GRAPHICS FOR ANIMATIONS
-                var graphicsLayer = new GraphicsLayer();
-                var currentElevationInfo = {
+
+                let annimationGraphicsLayer = new GraphicsLayer();
+                let currentElevationInfo = {
                     mode: "relative-to-ground",
                     offset: 10,
                     unit: "feet"
                 };
-                graphicsLayer.elevationInfo = currentElevationInfo;
-                map.add(graphicsLayer);
-
-                //-- Moving Line
-                var polyline = {
-                    type: "polyline", // autocasts as new Polyline()
-                    paths: []
+                annimationGraphicsLayer.elevationInfo = currentElevationInfo;
+                map.add(annimationGraphicsLayer);
+                
+                // -- Breadcrumb symbol
+                let breadSymbol = {
+                    type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                    size: 2.5,
+                    color: [0, 255, 255, 1],
+                    outline: { // autocasts as new SimpleLineSymbol()
+                        width: 0.5,
+                        color: [0, 255, 255, 1]
+                    }
                 };
-                let polylineGraphic = new Graphic({
-                    geometry: polyline,
-                    symbol: lineSymbol
-                });
-                graphicsLayer.add(polylineGraphic);
-
 
                 // -- Moving Circle
-                var point = {
+                let point = {
                     type: "point", // autocasts as new Point()
                     longitude: routes[0].geometry.coordinates[0][0],
                     latitude: routes[0].geometry.coordinates[0][1]
                 };
-                var markerSymbol = {
+                let markerSymbol = {
                     type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
                     color: [0, 255, 255, .25],
                     outline: { // autocasts as new SimpleLineSymbol()
@@ -449,31 +457,34 @@
                         width: "1px"
                     }
                 };
-                var pointGraphic = new Graphic({
+                let pointGraphic = new Graphic({
                     geometry: point,
                     symbol: markerSymbol
                 });
-                graphicsLayer.add(pointGraphic);
+                annimationGraphicsLayer.add(pointGraphic);
 
 
 
-                let interval = null, r = 0, routeCoords = [], routePics = [], intTime = null;
-                let rate = $("#slider").attr("data-slider-value"); routeLength = 0;
+
+                let interval = null, r = 0, routeCoords = [], routePics = [], intTime = null, rate = 150;
                 //-- Start the route.
                 function startRoute() {
 
+                    //-- Remove breadcrumb graphics and show feature layer 
+                    view.graphics.removeAll();
                     routelayer.definitionExpression = "ObjectID <= " + r;
-
+                   
                     //-- Get the current route;
                     if (r == routes.length) {
                         $("#route-caption").text("The End!");
                         $("#tour-start").show();
                         return;
                     }
-                    route = routes[r];
-
+                    let route = routes[r];
+                    // -- Set caption text
                     $("#route-caption").text(route.properties.Caption);
 
+                    // -- filter the pics in the current route
                     routePics = picFeatures.filter(function (d) {
                         return d.attributes.Route == route.properties.Route;
                     });
@@ -481,75 +492,80 @@
                     //-- Interpolate GeoJson line and create array of points.    
                     let line = turf.lineString(route.geometry.coordinates);
                     routeLength = turf.length(line, { units: 'feet' });
-                    let positions = routeLength / 1000;
-                    for (i = 0; i < 1001; i++) {
-                        routeCoords.push(turf.along(line, (i * positions), { units: 'feet' }))
+                    for (i = 0; i <= (route.distance / split); i++) {
+                        let coord = turf.along(line, (i * split), { units: 'feet' })
+                        routeCoords.push([coord.geometry.coordinates[0], coord.geometry.coordinates[1]])
                     }
 
-                    
-                    let miles = routeLength/5280;
-                    console.log("Miles ", miles, " Rate ", rate);
-                    intTime = ((miles / rate) *  3600); //50 miles per hour
-                    console.log("Seconds ", intTime);
-                    var bbox = turf.bbox(line);
+                    //-- Determine time in ms between intervals
+                    intTime = Math.floor((3600000 / rate) / (5280 / split));
+                    showDistance();
 
-                    var lineExtent = new Extent({
-                        xmin: bbox[0],
-                        ymin: bbox[1],
-                        xmax: bbox[2],
-                        ymax: bbox[3]
-                    })
-
-                    view.goTo(lineExtent.expand(1.5)).then(function(){
-                        console.log(intTime);
+                    // -- 
+                    if (droneView) {
                         interval = setInterval(startInterval, intTime);
-                    })
+                    } else {
+                        // -- Zoom to next extent
+                        let bbox = turf.bbox(line);
+                        let lineExtent = new Extent({
+                            xmin: bbox[0],
+                            ymin: bbox[1],
+                            xmax: bbox[2],
+                            ymax: bbox[3]
+                        })
+                        view.goTo(lineExtent.expand(1.5)).then(function () {
+                            interval = setInterval(startInterval, intTime);
+                        })
+                    }
                 }
 
 
-                let paths = [], c = 0, currentNode = null;
+                let c = 0, currentNode = null, zoom = 16;
                 //-- Start moving the graphics and detecting collisions
                 function startInterval() {
-
-                    let x = routeCoords[c].geometry.coordinates[0];
-                    let y = routeCoords[c].geometry.coordinates[1];
-
-                    var point = {
+                    // -- Create graphic point
+                    let x = routeCoords[c][0];
+                    let y = routeCoords[c][1];
+                    let point = {
                         type: "point", // autocasts as new Point()
                         longitude: x,
                         latitude: y
                     };
 
-                    paths.push([x, y]);
-                    var pline = {
-                        type: "polyline",  // autocasts as new Polyline()
-                        paths: paths
-                    };
+                    // -- Add breadcrumb and move point.
+                    if (c % 4 == 0) {
+                        view.graphics.add(new Graphic({
+                            geometry: point,
+                            symbol: breadSymbol
+                        }));
+                    }
                     pointGraphic.geometry = point;
-                    polylineGraphic.geometry = pline;
-                    c++
 
-                    if (c < 1000){
-                        let nextX = routeCoords[c + 1].geometry.coordinates[0];
-                        let nextY = routeCoords[c + 1].geometry.coordinates[1];
 
-                        let bearing = turf.bearing(turf.point([x, y]), turf.point([nextX, nextY]));
-                        
-                        console.log("bearing", bearing);
-                        console.log("heading", view.camera.heading)
+                    if (droneView && c < routeCoords.length && view.stationary) {
+                            let nextX = (c < routeCoords.length - 10) ? routeCoords[c + 10][0] :  x;
+                            let nextY = (c < routeCoords.length - 10) ? routeCoords[c + 10][1] : y;
+                            let lastX = (c > 10) ? routeCoords[c - 10][0] : x;
+                            let lastY = (c > 10) ? routeCoords[c - 10][1] : y;
 
-                        // view.goTo({
-                        //     position: [ x, y, 7000 ],
-                        //     heading = bearing
-                        // });
+                            let bearing = turf.bearing(turf.point([lastX, lastY]), turf.point([nextX, nextY]));
+                            let heading = (bearing < 0) ? 360 + bearing : bearing;
 
+                            view.goTo({
+                                center: [x, y],
+                                zoom: zoom,
+                                heading: heading,
+                                tilt: 60,
+                                 options: {
+                                     speedFactor: .1,
+                                     easing: "linear"
+                                 }
+                            });
                     }
 
+                    c++ // next coordinate
 
-
-
-
-                    // -- If there are pics to display, start detecting for collision
+                    //-- If there are pics to display, start detecting for collision
                     if (routePics.length > 0) {
                         let collideNode = collide(x, y);
                         if (collideNode != null && collideNode != currentNode) {
@@ -562,16 +578,17 @@
                             let sc = getScreenCoords(x, y);
                             let num = Math.floor(Math.random() * 10) - 5;
                             $('#overlay').fadeIn(1000).delay(4000).fadeOut(500);
+
                             thePic.closest(".wrap").css({
-                                "top": sc.y,
-                                "right": window.innerWidth - sc.x,
-                                'overflow': 'visible'
+                                "top": sc.y - 90,
+                                "right": window.innerWidth - sc.x, 
+                                //'overflow': 'visible',
                             }).animate({
                                 'right': '5%',
                                 'top': '5%',
                                 'max-width': '90%',
                                 'max-height': '90%',
-                                'opacity': '1',
+                                'opacity': '1'
                             }, 1000, showCaption)
                                 .delay(4000)
                                 .animate({
@@ -584,8 +601,9 @@
                                 });
                         }
                     }
+
                     //-- end of route, move to next route.
-                    if (c > 1000) {
+                     if (c > routeCoords.length - 1){
                         clearInterval(interval);
                         interval = null;
                         paths = [];
@@ -595,6 +613,7 @@
                         setTimeout(function () { startRoute(); }, 1000);
                     }
                 }
+
 
                 //-- Determine if coordinates collide with a picture.
                 function collide(x, y) {
@@ -614,9 +633,16 @@
                     $(this).find('.ptext').fadeIn(100).delay(3900).fadeOut();
                 };
 
+                function showDistance(){
+                    let miles = routes[r].distance/5280;
+                    let seconds = ((miles / rate) *  3600); 
+                    //let ms = ((miles / rate) *  3600000);
+                    console.log("Miles ", miles, " MPH ", rate, " Seconds ", seconds, " MSPer", intTime);
+                }
+
                 //-- Convert coordinates to screen pixels
                 function getScreenCoords(x, y) {
-                    var point = {
+                    let point = {
                         type: "point", // autocasts as new Point()
                         x: x,
                         y: y,
@@ -635,7 +661,8 @@
                 });
 
                 //-- Click event to start the tour.
-                on(dom.byId("tour-start"), "click", function () {
+                on(dom.byId("tour-start"), "click", function (event ) {
+                    event.preventDefault();
                     if (interval != null) return;
                     r = 0;
                     $("#tour-start").hide();
@@ -643,27 +670,31 @@
                     startRoute();
                 });
 
+                 view.watch("zoom", function(newZoom){  
+                     if (Math.round(newZoom) != zoom) zoom = Math.round(newZoom) 
+                 });  
+
                 $("#slider").slider({
+                    step: 50,
+                    min: 100,
+                    max: maxSpeed,
+                    value: rate,
                     reversed : true,
                     tooltip: 'always',
                     formatter: function(value) {
                         return value + " mph";
                     }
-
                 }).on("change", function(sliderValue) {
                     rate = sliderValue.value.newValue;
-                    let miles = routeLength/5280;
-                    if (miles > 0){
-                        console.log("Miles ", miles, " Rate ", rate);
-                        intTime = ((miles / rate) *  3600); //50 miles per hour
-                        console.log("Seconds ", intTime);
+                    if (routeCoords.length > 0){
+                       intTime = (3600000 / rate) / (5280 / split)
+                        showDistance();
                         clearInterval(interval);
                         interval = setInterval(startInterval, intTime);
                     }
                 });
 
             });
-
 
 
         });
@@ -674,7 +705,7 @@
 
     <div id="mapcontainer">
         <div id="viewDiv"></div>
-        <input id="slider" type="text" data-slider-min="90" data-slider-max="900" data-slider-step="30" data-slider-value="120" data-slider-orientation="vertical"/>
+        <input id="slider" type="text" data-slider-orientation="vertical"/>
     </div>
 
     <div id="tour">
