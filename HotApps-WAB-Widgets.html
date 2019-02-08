@@ -1,0 +1,145 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Hot Apps - WAB/Widgets</title>
+    <meta name="description" content="MapNight Presentation">
+    <meta name="author" content="Shad Campbell">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/blood.css" id="theme">
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="tree.css">
+    <style>
+        .node text {
+            fill: #eee;
+        }
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div class="reveal">
+        <!-- Any section element inside of this container is displayed as a slide -->
+        <div class="slides">
+
+            <section>
+                <h2>
+                    Web AppBuilder (Developer Edition)
+                </h2>
+                <br />
+                <h3>@ Deschutes County</h3>
+                <br />
+                <p>
+                    Shad Campbell <br /> <small>Deschutes County Information Technology</small><br />
+                </p>
+            </section>
+
+            <section data-state="gisTree" id="gisTree">
+                <h3>Departments Using GIS</h3>
+                <span id='gisTree'></span>
+            </section>
+
+
+            <section>
+                <h3>One App to rule them all</h3>
+                <p class="fragment">Overcomplicated</p>
+                <p class="fragment">Lazy</p>
+                <p class="fragment">Focus and simplify</p>
+                <p class="fragment">Still...lots of boilerplate (Pan/Zoom/Identify/TOC/Layers/Print)</p>
+            </section>
+
+            <section>
+                <span>
+                    <img src="https://memegenerator.net/img/instances/68772385/am-i-the-only-one-here-who-does-not-like-to-write-boilerplate-code.jpg"
+                        style="max-height:500px" />
+                </span>
+            </section>
+
+            <section>
+                <h3>The good...</h3>
+                <p class="fragment">Non-developers can create Apps!</p>
+                <p class="fragment">Developers can focus.</p>
+            </section>
+
+            <section>
+                <h3>The bad...</h3>
+                <p class="fragment">AGOL License for creating web map</p>
+                <p class="fragment">AGOL License for creating web app</p>
+                <p class="fragment">Public = Free | Secure = $$</p>
+            </section>
+
+
+            <section>
+                <h2>Let's have a look</h2>
+                <ul>
+                    <li><a target="_blank" href="http://localhost:8080/MyStoryTour.html?s=fast&r=https://gist.githubusercontent.com/shadc/1f6f670d5eba9246e660/raw/0888a854d8e0b9125b47b2eb27e6988a2eee5b55/Bend%2520Ale%2520Trail%2520-%2520part%25201.geojson">Bend
+                            Ale Trail</a></li>
+                    <li><a target="_blank" href="http://localhost:8080/MyStoryTour.html">Bluebird day on Mt. Bachelor</a></li>
+                </ul>
+            </section>
+
+
+            <section>
+                <h3>Resources</h3>
+                <p class="fragment">Show widget resources</p>
+            </section>
+
+
+
+
+            <section>
+                <br /><br />
+                <h1>Thank you</h1>
+            </section>
+
+        </div>
+    </div>
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+    <script>
+
+        // Full list of configuration options available at:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            viewDistance: 11, // this accomidates sliding between long distance slides.
+            // Optional reveal.js plugins
+            dependencies: [
+                { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+                { src: 'plugin/markdown/marked.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+                { src: 'plugin/zoom-js/zoom.js', async: true },
+                { src: 'plugin/notes/notes.js', async: true }
+            ]
+        });
+
+    </script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.js"></script>
+    <script src='tree_data_mapnight.js'></script>
+    <script src='tree_mapnight.js'></script>
+
+</body>
+
+</html>

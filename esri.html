@@ -2,113 +2,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>test</title>
 
-<title>Graphics Test</title>
-
-  <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
-  <script src="https://js.arcgis.com/4.10/"></script>
+  <link  rel="stylesheet" type="text/css" href="slider.css">
 
   <style>
-    html,
-    body,
-    #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-    }
+  
+  html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #3d3d4a;
+  color: white;
+  min-height: 400px;
+  font-family: sans-serif;
+}
+
   </style>
+  <script src="slider.js"></script>
 
-  <script>
-    require([
-      "esri/Map",
-      "esri/views/SceneView",
-      "esri/geometry/Polyline",
-      "esri/Graphic",
-      "dojox/timing",
-      "dojo/domReady!"
-    ], function(
-      Map, MapView, Polyline, Graphic, DojoTimer
-    ) {
+<script>
 
-      var map = new Map({
-        basemap: "hybrid",
-        ground: "world-elevation"
-      });
+//console.log(app);
 
-      var view = new MapView({
-        center: [-111.30, 52.68],
-        container: "viewDiv",
-        map: map,
-        zoom: 6
-      });
+app.updateSlider();
 
-      // First create a line geometry 
-      var polyline = new Polyline({
-        type: "polyline", // autocasts as new Polyline()
-        paths: [
-          [-112.3, 52.69],
-          [-114.3, 52.69]
-        ]
-      });
-
-      // Create a symbol for drawing the line
-      var lineSymbol = {
-        type: "simple-line", // autocasts as SimpleLineSymbol()
-        color: [226, 119, 40],
-        width: 4
-      };
+</script>
 
 
-      var multiPoint = {
-        type: "multipoint",
-        points:[
-          [-112.3, 52.69],
-          [-114.3, 52.69]
-          ]
-      }
-
-      var markerSymbol = {
-        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-        color: [226, 119, 40]
-      };
-
-     // Create a Graphic
-     var multipPointGraphic = new Graphic({
-        geometry: multiPoint,
-        symbol: markerSymbol
-      });
-      
-      view.graphics.add(multipPointGraphic);
-
-
-
-      // Create a Graphic
-      // var polylineGraphic = new Graphic({
-      //   geometry: polyline,
-      //   symbol: lineSymbol
-      // });
-
-      // Add the graphic to the view's graphics layer
-      //view.graphics.add( polylineGraphic);
-
-      
-      // function start(){
-      //   polylineGraphic.geometry.insertPoint(0,0, [-112.3, 53.68]);
-      //   console.log(polylineGraphic.geometry.paths);
-      // }
-
-      //start();
-      //setTimeout(function () { start(); }, 3000);
-
-
-
-    });
-  </script>
 </head>
-
 <body>
-  <div id="viewDiv"></div>
-</body>
+  <div class="info">Vertical cross-browser supported input range html elements, no library dependency, no transform rotate.</div>
 
+  <div class="container">
+  
+    <div class="range-slider">
+      <input type="range" orient="vertical" min="0" max="20" />
+      <div class="range-slider__bar"></div>
+      <div class="range-slider__thumb"></div>
+    </div>
+  
+  </div>
+</body>
 </html>

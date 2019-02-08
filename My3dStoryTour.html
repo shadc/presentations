@@ -12,7 +12,6 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.0/css/bootstrap-slider.min.css">
 
 
-
     <style>
         html,
         body,
@@ -60,10 +59,6 @@
             font-family: 'Cedarville Cursive', sans-serif;
             color:red;
         }
-
-
-
-
 
         #basemap-button {
             padding-left: 8px;
@@ -137,7 +132,7 @@
 
 
             ul.gallery .ptext {
-                font-size: 2.5vw;
+                font-size: 2vw;
                 position: absolute;
                 bottom: 0;
                 left: 12%;
@@ -188,7 +183,9 @@
             margin-top: 2px;
             margin-bottom: 2px;
             }
-
+            ul.gallery .ptext {
+                font-size: 2.5vw;
+            }
         }
 
         @media (max-width: 500px) {
@@ -213,6 +210,7 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.0/bootstrap-slider.min.js'></script>
     <script src="https://js.arcgis.com/4.10/"></script>
 
+
     <script>
         require([
             "esri/layers/WebTileLayer",
@@ -230,7 +228,6 @@
             "esri/geometry/support/webMercatorUtils"
         ], function (WebTileLayer, Map, SceneView, array, GraphicsLayer, Graphic, FeatureLayer, Field, on, dom, Extent, domConstruct, webMercatorUtils) {
 
-
             let map = new Map({
                 ground: "world-elevation"
             });
@@ -245,7 +242,7 @@
                 map.add(new WebTileLayer($(this).attr("data-url"), JSON.parse($(this).attr("data-options"))));
             });
 
-            let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/e3b398a44b49329b4e1bcb718cd2e12763f57a23/Bluebird%2520Day%2520at%2520MT.%2520Bachelor.geojson";
+            let gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/c75003ffb71ebde28d05db9e6fafc0466a19de94/Bluebird%2520Day%2520at%2520Mt.%2520Bachelor.geojson";
             let geoJson = (url('?tour') != null) ? url('?tour') : gist;
             let filename = geoJson.match(/([^\/]+)(?=\.\w+$)/)[0];
             let tourname = (url('?tourName') != null) ? decodeURI(url('?tourName')) : decodeURI(decodeURI(filename));
@@ -624,16 +621,16 @@
                             let sc = getScreenCoords(x, y);
                             let num = Math.floor(Math.random() * 10) - 5;
                             $('#overlay').fadeIn(1000).delay(4000).fadeOut(500);
-
                             thePic.closest(".wrap").css({
-                                "top": sc.y - 90,
-                                "right": window.innerWidth - sc.x,
-                                //'overflow': 'visible',
+                                "top": window.innerHeight / 2,
+                                "right": window.innerWidth / 2,
+                                //"top": sc.y,
+                                //"right": window.innerWidth - sc.x,
                             }).animate({
-                                'right': '5%',
-                                'top': '5%',
                                 'max-width': '90%',
                                 'max-height': '90%',
+                                'right': '5%',
+                                'top': '5%',
                                 'opacity': '1'
                             }, 1000, showCaption)
                                 .delay(4000)
@@ -751,9 +748,6 @@
         <input id="slider" type="text" data-slider-orientation="vertical" />
     </div>
 
-
-
-
     <div class="tour">
         <div class="tour-title">
             <div class="tour-text">My 3D Story Tour - </div>
@@ -762,20 +756,6 @@
         </div>
         <div id="route-caption"></div>
     </div>
-
-
-
-
-    <!-- <div id="tour">
-        <div class="tour-title">
-            <div class="tour-text">My 3D Story Tour -</div><div id="tour-name"></div>
-        </div>
-        
-        <div id="tour-container">
-            <a href="#" id="tour-start">Click here to start tour...</a>
-        </div>
-        <div id="route-caption"></div>
-    </div> -->
 
     <div id="overlay"></div>
     <ul class="gallery" id="gallery"></ul>

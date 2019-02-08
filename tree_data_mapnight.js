@@ -1,5 +1,5 @@
 var gisData = [{
-    "name": "GIS @ Deschutes",
+    "name": "Information Technology",
     "parent": "null",
     "_children": [
             {
@@ -34,10 +34,6 @@ var gisData = [{
     {
         "name": "Forester",
         "url": "#/2/9"
-    },
-    {
-        "name": "Information Technology",
-        "url": "#/2/10"
     }
 
     ]
